@@ -1875,6 +1875,9 @@ function App() {
   const userName = logged ? logged.name : 'Usuário';
   const userInitials = userName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
   const doLogout = () => { localStorage.removeItem('co_logged'); window.location.href = 'calcobra-ultra.html'; };
+  const isAdmin = useMemo(() => {
+    try { const users = JSON.parse(localStorage.getItem('co_users') || '[]'); return users.some(u => u.email === logged?.email && u.role === 'admin'); } catch { return false; }
+  }, [logged]);
 
   const NAV = [
     { id: "dashboard",    label: "Dashboard",      icon: I.dash },
@@ -1931,6 +1934,15 @@ function App() {
             <div style={{ fontFamily: C.mono, fontSize: 9, color: C.gold, letterSpacing: "0.06em" }}>Plano Free</div>
           </div>
         </div>
+        {isAdmin && (
+          <button type="button" onClick={() => window.location.href = 'admin.html'} style={{ display: "flex", alignItems: "center", gap: 8, width: "calc(100% - 16px)", margin: "0 8px 6px", padding: "9px 12px", borderRadius: 8, border: `1px solid ${C.goldMid}`, cursor: "pointer", background: C.goldDim, color: C.gold3, fontFamily: C.mono, fontSize: 11, fontWeight: 600, transition: "all .14s" }}
+            onMouseOver={e => { e.currentTarget.style.background = "rgba(201,152,42,.18)"; }}
+            onMouseOut={e => { e.currentTarget.style.background = C.goldDim; }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Painel Admin
+          </button>
+        )}
         <button type="button" onClick={doLogout} style={{ display: "flex", alignItems: "center", gap: 8, width: "calc(100% - 16px)", margin: "0 8px 10px", padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(224,112,96,.15)", cursor: "pointer", background: "rgba(224,112,96,.06)", color: "#e07060", fontFamily: C.mono, fontSize: 11, fontWeight: 500, transition: "all .14s" }}
           onMouseOver={e => { e.currentTarget.style.background = "rgba(224,112,96,.14)"; e.currentTarget.style.borderColor = "rgba(224,112,96,.3)"; }}
           onMouseOut={e => { e.currentTarget.style.background = "rgba(224,112,96,.06)"; e.currentTarget.style.borderColor = "rgba(224,112,96,.15)"; }}
