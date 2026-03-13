@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CalcObra Pro — Dashboard</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  html,body,#root{margin:0;padding:0;height:100%;overflow:hidden;background:#040404;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function() {
+  // Auth guard
+  var logged = null;
+  try { logged = JSON.parse(localStorage.getItem('co_logged')); } catch(e){}
+  if (!logged) { window.location.href = 'calcobra-ultra.html'; return; }
+
+  // Load JSX via fetch then transform with Babel
+  fetch('calcobra_dashboard.jsx')
+    .then(function(r) { return r.text(); })
+    .then(function(code) {
+      var transformed = Babel.transform(code, { presets: ['react'] }).code;
+      var script = document.createElement('script');
+      script.textContent = transformed + '\n;var root=ReactDOM.createRoot(document.getElementById("root"));root.render(React.createElement(App));';
+      document.body.appendChild(script);
+    })
+    .catch(function(err) {
+      document.getElementById('root').innerHTML = '<div style="color:#e07060;padding:40px;font-family:monospace">Erro ao carregar dashboard: ' + err.message + '</div>';
+    });
+})();
+</script>
+</body>
+</html>
