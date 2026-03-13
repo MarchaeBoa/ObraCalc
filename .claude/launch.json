@@ -3,13 +3,10 @@
   "configurations": [
     {
       "name": "calcobra-landing",
-      "runtimeExecutable": "powershell.exe",
-      "runtimeArgs": [
-        "-ExecutionPolicy", "Bypass",
-        "-File", "C:\\Users\\Willia\\Desktop\\PROJETO OBRACALC\\serve.ps1"
-      ],
-      "port": 8099,
-      "autoPort": true
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "serve.cmd"],
+      "port": 8100,
+      "autoPort": false
     }
   ]
 }

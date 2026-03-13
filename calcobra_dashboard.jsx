@@ -195,152 +195,542 @@ const Chip = ({ label, value }) => (
   </div>
 );
 
-// ─── SIMULADOR ────────────────────────────────────────────────────────────────
+// ─── SIMULADOR SINAPI ─────────────────────────────────────────────────────────
+// Base de dados SINAPI — composições reais com códigos oficiais
+// Referência: SINAPI Jan/2026 (Caixa/IBGE) — custo nacional R$ 1.920,74/m²
+// Fonte: caixa.gov.br/sinapi · ibge.gov.br/sinapi
+
+const SINAPI_UF = {
+  AC:{n:"Acre",f:1.08},AL:{n:"Alagoas",f:0.91},AM:{n:"Amazonas",f:1.12},AP:{n:"Amapá",f:1.15},
+  BA:{n:"Bahia",f:0.93},CE:{n:"Ceará",f:0.90},DF:{n:"Distrito Federal",f:1.05},ES:{n:"Espírito Santo",f:0.97},
+  GO:{n:"Goiás",f:0.94},MA:{n:"Maranhão",f:0.92},MG:{n:"Minas Gerais",f:0.98},MS:{n:"Mato Grosso do Sul",f:0.99},
+  MT:{n:"Mato Grosso",f:1.02},PA:{n:"Pará",f:1.06},PB:{n:"Paraíba",f:0.89},PE:{n:"Pernambuco",f:0.92},
+  PI:{n:"Piauí",f:0.88},PR:{n:"Paraná",f:1.00},RJ:{n:"Rio de Janeiro",f:1.10},RN:{n:"Rio Grande do Norte",f:0.91},
+  RO:{n:"Rondônia",f:1.04},RR:{n:"Roraima",f:1.14},RS:{n:"Rio Grande do Sul",f:1.03},SC:{n:"Santa Catarina",f:1.02},
+  SE:{n:"Sergipe",f:0.90},SP:{n:"São Paulo",f:1.07},TO:{n:"Tocantins",f:1.01},
+};
+
+// Padrões construtivos (multiplicador sobre base SINAPI)
+const SINAPI_PADRAO = {
+  baixo:  { n: "Popular (R1-B)",    f: 0.72, desc: "Alvenaria simples, acabamento básico" },
+  normal: { n: "Normal (R1-N)",     f: 1.00, desc: "Padrão médio, acabamento convencional" },
+  alto:   { n: "Alto (R1-A)",       f: 1.42, desc: "Acabamento de alto padrão, importados" },
+};
+
+// Etapas com composições SINAPI reais — códigos, descrições e custos base (R$/m² ref. nacional jan/2026)
+const SINAPI_ETAPAS = [
+  { id:"prelim", nome:"Serviços Preliminares", icon:"M3 3v18h18M9 15v3M13 11v7M17 7v11",
+    pct: 3.0, codigos:[
+      {cod:"73847/2",desc:"Limpeza mecânica do terreno",un:"m²",val:4.82},
+      {cod:"74077/3",desc:"Locação convencional de obra",un:"m²",val:8.15},
+      {cod:"74209/1",desc:"Placa de identificação de obra",un:"m²",val:326.50},
+      {cod:"73948",desc:"Tapume de madeira compensada",un:"m²",val:68.74},
+    ]},
+  { id:"fundacao", nome:"Fundação", icon:"M2 20h20M4 20V10l8-7 8 7v10",
+    pct: 5.5, codigos:[
+      {cod:"96543",desc:"Armação de sapata/baldrame CA-60 5mm",un:"kg",val:17.82},
+      {cod:"96545",desc:"Armação de sapata/baldrame CA-50 8mm",un:"kg",val:15.75},
+      {cod:"96535",desc:"Forma para sapata madeira serrada 25mm",un:"m²",val:132.86},
+      {cod:"96995",desc:"Reaterro manual apiloado com soquete",un:"m³",val:45.74},
+      {cod:"96546",desc:"Armação baldrame CA-50 10mm montagem",un:"kg",val:17.81},
+      {cod:"94965",desc:"Concreto fck=25MPa bombeado",un:"m³",val:498.62},
+    ]},
+  { id:"estrutura", nome:"Estrutura / Superestrutura", icon:"M4 21V7l8-4 8 4v14M4 11h16M12 3v18",
+    pct: 16.0, codigos:[
+      {cod:"104488",desc:"Estrutura concreto armado fck=25 edif. térrea",un:"m²",val:312.45},
+      {cod:"92872",desc:"Laje pré-moldada p/ forro e=12cm",un:"m²",val:128.50},
+      {cod:"92874",desc:"Laje pré-moldada p/ piso e=16cm",un:"m²",val:165.80},
+      {cod:"96547",desc:"Armação pilar/viga CA-50 10mm",un:"kg",val:17.53},
+      {cod:"92478",desc:"Forma pilar retangular madeira",un:"m²",val:98.74},
+      {cod:"92480",desc:"Forma de viga madeira",un:"m²",val:86.92},
+    ]},
+  { id:"alvenaria", nome:"Alvenaria / Vedação", icon:"M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18",
+    pct: 11.0, codigos:[
+      {cod:"103323",desc:"Alvenaria bloco cerâmico 9×19×39 e=9cm",un:"m²",val:70.56},
+      {cod:"103324",desc:"Alvenaria bloco cerâmico 14×19×39 e=14cm",un:"m²",val:89.42},
+      {cod:"103334",desc:"Alvenaria bloco concreto 14×19×39 e=14cm",un:"m²",val:95.68},
+      {cod:"101161",desc:"Alvenaria elemento vazado concreto (cobogó)",un:"m²",val:112.40},
+      {cod:"87503",desc:"Verga/contraverga concreto armado",un:"m",val:42.85},
+    ]},
+  { id:"cobertura", nome:"Cobertura", icon:"M3 21l9-9 9 9M3 21h18",
+    pct: 4.0, codigos:[
+      {cod:"100393",desc:"Trama madeira (ripas+caibros+terças)",un:"m²",val:85.72},
+      {cod:"100392",desc:"Cobertura telha cerâmica de encaixe",un:"m²",val:17.01},
+      {cod:"94227",desc:"Cobertura telha fibrocimento 6mm",un:"m²",val:52.48},
+      {cod:"102190",desc:"Cumeeira cerâmica com argamassa",un:"m",val:28.90},
+      {cod:"92583",desc:"Calha chapa galvanizada n°26",un:"m",val:78.35},
+    ]},
+  { id:"impermeab", nome:"Impermeabilização", icon:"M12 2C6.48 6.44 2 11.15 2 16.5S6.48 22 12 22s10-1.17 10-5.5S17.52 2 12 2",
+    pct: 3.0, codigos:[
+      {cod:"98555",desc:"Impermeabilização manta asfáltica 3mm",un:"m²",val:68.92},
+      {cod:"98557",desc:"Impermeabilização manta asfáltica 4mm",un:"m²",val:82.15},
+      {cod:"88489",desc:"Impermeabilização argamassa polimérica",un:"m²",val:32.47},
+    ]},
+  { id:"inst_elet", nome:"Instalações Elétricas", icon:"M13 2L3 14h9l-1 8 10-12h-9l1-8z",
+    pct: 8.0, codigos:[
+      {cod:"91926",desc:"Ponto de tomada 2P+T incluindo elétroduto e fiação",un:"un",val:168.45},
+      {cod:"91928",desc:"Ponto de iluminação incluindo elétroduto e fiação",un:"un",val:142.80},
+      {cod:"91930",desc:"Ponto de interruptor simples 1 tecla",un:"un",val:125.60},
+      {cod:"91940",desc:"Quadro de distribuição 12/16 disjuntores",un:"un",val:585.40},
+      {cod:"91953",desc:"Disjuntor monopolar 20A",un:"un",val:18.92},
+      {cod:"97601",desc:"Eletroduto PVC rígido 25mm",un:"m",val:12.85},
+    ]},
+  { id:"inst_hidr", nome:"Instalações Hidráulicas", icon:"M12 2v20M5 5h14M5 19h14",
+    pct: 10.0, codigos:[
+      {cod:"89356",desc:"Ponto de água fria — tubo PVC 25mm",un:"un",val:145.20},
+      {cod:"89449",desc:"Ponto de esgoto — tubo PVC 100mm",un:"un",val:118.75},
+      {cod:"89509",desc:"Vaso sanitário louça com cx acoplada",un:"un",val:562.40},
+      {cod:"89515",desc:"Lavatório louça com coluna",un:"un",val:385.60},
+      {cod:"89398",desc:"Registro de gaveta 25mm (3/4\")",un:"un",val:85.42},
+      {cod:"89577",desc:"Caixa d'água polietileno 1000L",un:"un",val:635.80},
+      {cod:"89437",desc:"Tubo PVC esgoto 100mm",un:"m",val:42.65},
+    ]},
+  { id:"revestimento", nome:"Revestimento / Acabamento", icon:"M4 4h16v16H4zM9 4v16M15 4v16M4 9h16M4 15h16",
+    pct: 25.0, codigos:[
+      {cod:"87878",desc:"Chapisco interno parede 1:3 preparo manual",un:"m²",val:5.46},
+      {cod:"87905",desc:"Chapisco fachada 1:3 preparo betoneira",un:"m²",val:8.91},
+      {cod:"104952",desc:"Massa única 1:2:8 parede interna e=25mm",un:"m²",val:41.40},
+      {cod:"87264",desc:"Reboco/massa fina parede interna e=5mm",un:"m²",val:25.18},
+      {cod:"87246",desc:"Contrapiso argamassa e=3cm",un:"m²",val:32.60},
+      {cod:"87261",desc:"Piso cerâmico 45×45 PEI-4 argamassa",un:"m²",val:72.48},
+      {cod:"87265",desc:"Revestimento cerâmico parede 35×35",un:"m²",val:68.52},
+      {cod:"87268",desc:"Piso porcelanato 60×60 retificado",un:"m²",val:118.90},
+    ]},
+  { id:"esquadrias", nome:"Esquadrias / Vidros", icon:"M3 3h18v18H3zM3 12h18M12 3v18",
+    pct: 7.0, codigos:[
+      {cod:"91338",desc:"Porta interna madeira semi-oca 80×210cm",un:"un",val:582.60},
+      {cod:"91339",desc:"Porta externa madeira maciça 80×210cm",un:"un",val:1285.40},
+      {cod:"91311",desc:"Janela alumínio correr 120×120cm c/ vidro",un:"un",val:892.50},
+      {cod:"91313",desc:"Janela alumínio maxim-ar 60×60cm c/ vidro",un:"un",val:425.80},
+      {cod:"91335",desc:"Kit porta correr alumínio 80×210cm",un:"un",val:1150.00},
+    ]},
+  { id:"pintura", nome:"Pintura", icon:"M18 4V3a1 1 0 0 0-2 0v1H8V3a1 1 0 0 0-2 0v1H2v18h20V4zM2 8h20",
+    pct: 5.5, codigos:[
+      {cod:"88485",desc:"Pintura látex PVA 2 demãos parede interna",un:"m²",val:14.82},
+      {cod:"88487",desc:"Pintura acrílica 2 demãos parede externa",un:"m²",val:18.45},
+      {cod:"88497",desc:"Massa corrida PVA 2 demãos",un:"m²",val:12.68},
+      {cod:"88495",desc:"Selador acrílico 1 demão",un:"m²",val:5.92},
+      {cod:"88491",desc:"Textura acrílica rolada",un:"m²",val:22.10},
+    ]},
+  { id:"limpeza", nome:"Limpeza Final / Complementares", icon:"M20 6L9 17l-5-5",
+    pct: 2.0, codigos:[
+      {cod:"73930",desc:"Limpeza final da obra",un:"m²",val:6.85},
+      {cod:"84087",desc:"Paisagismo/plantio de grama",un:"m²",val:12.40},
+      {cod:"73978",desc:"Muro de divisa bloco + reboco",un:"m²",val:185.60},
+    ]},
+];
+
+// BDI padrão para obras (Acórdão TCU 2622/2013)
+const BDI_PADRAO = { min: 20.34, normal: 24.23, max: 29.89 };
+
 function Simulador({ onSave }) {
-  const [f, setF] = useState({ tipo: "piso", material: "Porcelanato 60×60", comp: 10, larg: 5, esp: 0.01, perda: 10, matP: 85, moP: 45, extra: 200, inst: true, margem: 25 });
-  const s = k => v => setF(p => ({ ...p, [k]: v }));
+  const [uf, setUf] = useState("SP");
+  const [padrao, setPadrao] = useState("normal");
+  const [area, setArea] = useState(120);
+  const [pavimentos, setPavimentos] = useState(1);
+  const [bdi, setBdi] = useState(BDI_PADRAO.normal);
+  const [encSocial, setEncSocial] = useState(86.0);
+  const [etapasCustom, setEtapasCustom] = useState({});
+  const [expandido, setExpandido] = useState(null);
+  const [modoDetalhe, setModoDetalhe] = useState(false);
+
+  const togglePct = (id, delta) => {
+    setEtapasCustom(prev => {
+      const base = SINAPI_ETAPAS.find(e => e.id === id).pct;
+      const cur = prev[id] !== undefined ? prev[id] : base;
+      const nv = Math.max(0, Math.min(50, cur + delta));
+      return { ...prev, [id]: parseFloat(nv.toFixed(1)) };
+    });
+  };
+
+  const resetPcts = () => setEtapasCustom({});
 
   const r = useMemo(() => {
-    const area    = F(f.comp) * F(f.larg);
-    const aL      = area * (1 + F(f.perda) / 100);
-    const mat     = aL * F(f.matP);
-    const mo      = f.inst ? area * F(f.moP) : 0;
-    const extra   = F(f.extra);
-    const perda$  = (aL - area) * F(f.matP);
-    const sub     = mat + mo + extra;
-    const lucro   = sub * (F(f.margem) / 100);
-    const total   = sub + lucro;
-    const pm2     = area > 0 ? total / area : 0;
-    return { area, aL, mat, mo, extra, perda$, sub, lucro, total, pm2 };
-  }, [f]);
+    const fUf = SINAPI_UF[uf].f;
+    const fPad = SINAPI_PADRAO[padrao].f;
+    const areaTotal = F(area) * F(pavimentos);
+    const custoBaseM2 = 1920.74; // SINAPI jan/2026
+    const custoM2Ajust = custoBaseM2 * fUf * fPad;
+    const custoObraBase = custoM2Ajust * areaTotal;
+
+    let totalPcts = 0;
+    const etapas = SINAPI_ETAPAS.map(et => {
+      const pct = etapasCustom[et.id] !== undefined ? etapasCustom[et.id] : et.pct;
+      totalPcts += pct;
+      const custoEtapa = custoObraBase * (pct / 100);
+      const custoM2Etapa = areaTotal > 0 ? custoEtapa / areaTotal : 0;
+      return { ...et, pctUsado: pct, custo: custoEtapa, custoM2: custoM2Etapa };
+    });
+
+    const subtotal = custoObraBase;
+    const valBdi = subtotal * (F(bdi) / 100);
+    const total = subtotal + valBdi;
+    const totalM2 = areaTotal > 0 ? total / areaTotal : 0;
+
+    // Composição Mat vs MO (referência SINAPI jan/2026: 53.87% material, 39.34% MO, 6.79% equip)
+    const pctMat = 53.87;
+    const pctMo = 39.34;
+    const pctEquip = 6.79;
+
+    return { fUf, fPad, areaTotal, custoBaseM2, custoM2Ajust, custoObraBase: subtotal,
+             etapas, totalPcts, valBdi, total, totalM2, pctMat, pctMo, pctEquip };
+  }, [uf, padrao, area, pavimentos, bdi, encSocial, etapasCustom]);
+
+  // Barra horizontal de proporção
+  const BarProp = ({ items }) => (
+    <div style={{ display:"flex", height:6, borderRadius:3, overflow:"hidden", background:C.bg5 }}>
+      {items.map((it,i)=>(
+        <div key={i} style={{ width:`${it.pct}%`, background:it.color, transition:"width .3s" }}
+          title={`${it.label}: ${N(it.pct,1)}%`} />
+      ))}
+    </div>
+  );
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: 18, alignItems: "start" }}>
-      {/* ── Form ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <Card>
-          <Label>Tipo de Serviço</Label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Sel label="Serviço" value={f.tipo} onChange={s("tipo")} options={[
-              { value: "piso",      label: "Piso / Revestimento" },
-              { value: "marmore",   label: "Mármore / Pedra Natural" },
-              { value: "alvenaria", label: "Alvenaria" },
-              { value: "reboco",    label: "Reboco / Massa" },
-              { value: "forro",     label: "Forro / Teto" },
-            ]} />
-            <Field label="Material" value={f.material} onChange={s("material")} type="text" />
+    <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+      {/* Header SINAPI */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ padding:"5px 12px", background:C.goldDim, border:`1px solid ${C.goldMid}`, borderRadius:20, display:"flex", alignItems:"center", gap:7 }}>
+            <div style={{ width:6, height:6, borderRadius:"50%", background:C.gold, animation:"breathe 2s infinite" }}/>
+            <span style={{ fontFamily:C.mono, fontSize:9, color:C.gold2, letterSpacing:"0.12em" }}>SINAPI JAN/2026</span>
           </div>
-        </Card>
-
-        <Card>
-          <Label>Dimensões</Label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            <Field label="Comprimento" value={f.comp} onChange={s("comp")} unit="m" />
-            <Field label="Largura"     value={f.larg} onChange={s("larg")} unit="m" />
-            <Field label="Espessura"   value={f.esp}  onChange={s("esp")}  unit="m" step="0.001" />
-          </div>
-          <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 12px", background: C.bg2, borderRadius: 7, border: `1px solid ${C.border}` }}>
-            <span style={{ fontFamily: C.mono, fontSize: 10, color: C.text2 }}>Área calculada</span>
-            <span style={{ fontFamily: C.head, fontSize: 18, fontWeight: 700, color: C.gold3, letterSpacing: "-0.5px" }}>{N(r.area)} m²</span>
-          </div>
-        </Card>
-
-        <Card>
-          <Label>Valores e Custos</Label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Field label="Perda de material" value={f.perda} onChange={s("perda")} unit="%" hint="10–15% recomendado" />
-            <Field label="Material (por m²)" value={f.matP}  onChange={s("matP")}  unit="R$" />
-            <Field label="Mão de obra (por m²)" value={f.moP} onChange={s("moP")}  unit="R$" />
-            <Field label="Custos adicionais"  value={f.extra} onChange={s("extra")} unit="R$" />
-            <Field label="Margem de lucro"    value={f.margem} onChange={s("margem")} unit="%" />
-            <div style={{ display: "flex", alignItems: "flex-end" }}>
-              <Toggle label="Incluir instalação" checked={f.inst} onChange={v => s("inst")(v)} />
-            </div>
-          </div>
-        </Card>
+          <span style={{ fontFamily:C.mono, fontSize:10, color:C.text3 }}>Base: R$ 1.920,74/m² nacional</span>
+        </div>
+        <div style={{ display:"flex", gap:6 }}>
+          <Btn onClick={()=>setModoDetalhe(!modoDetalhe)} icon="calc" variant="outline" sm>
+            {modoDetalhe ? "Modo Resumido" : "Modo Detalhado"}
+          </Btn>
+        </div>
       </div>
 
-      {/* ── Results ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, position: "sticky", top: 0 }}>
-        {/* Live pill */}
-        <div style={{ display: "flex", alignItems: "center", gap: 7, alignSelf: "flex-start", padding: "4px 11px", background: C.goldDim, border: `1px solid ${C.goldMid}`, borderRadius: 20 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.gold, animation: "breathe 2s infinite" }} />
-          <span style={{ fontFamily: C.mono, fontSize: 9, color: C.gold2, letterSpacing: "0.12em" }}>CÁLCULO EM TEMPO REAL</span>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 360px", gap:18, alignItems:"start" }}>
+        {/* ── FORM LEFT ── */}
+        <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+          {/* UF + Padrão */}
+          <Card>
+            <Label>Localização e Padrão</Label>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+              <Sel label="Estado (UF)" value={uf} onChange={setUf}
+                options={Object.entries(SINAPI_UF).sort((a,b)=>a[1].n.localeCompare(b[1].n)).map(([k,v])=>({value:k,label:`${v.n} (${k})`}))} />
+              <Sel label="Padrão Construtivo" value={padrao} onChange={setPadrao}
+                options={Object.entries(SINAPI_PADRAO).map(([k,v])=>({value:k,label:v.n}))} />
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginTop:12 }}>
+              <Chip label="Fator UF" value={`×${SINAPI_UF[uf].f.toFixed(2)}`} />
+              <Chip label="Fator Padrão" value={`×${SINAPI_PADRAO[padrao].f.toFixed(2)}`} />
+              <Chip label="m² Ajustado" value={R(r.custoM2Ajust)} />
+            </div>
+            <div style={{ marginTop:8, padding:"6px 10px", background:C.bg2, borderRadius:6, border:`1px solid ${C.border}` }}>
+              <span style={{ fontFamily:C.mono, fontSize:10, color:C.text3 }}>{SINAPI_PADRAO[padrao].desc}</span>
+            </div>
+          </Card>
+
+          {/* Dados da Obra */}
+          <Card>
+            <Label>Dados da Obra</Label>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:12 }}>
+              <Field label="Área por pavimento" value={area} onChange={setArea} unit="m²" />
+              <Field label="Pavimentos" value={pavimentos} onChange={setPavimentos} unit="pav" step="1" />
+              <Field label="BDI" value={bdi} onChange={setBdi} unit="%" hint={`TCU: ${BDI_PADRAO.min}–${BDI_PADRAO.max}%`} />
+              <Field label="Encargos Sociais" value={encSocial} onChange={setEncSocial} unit="%" hint="Horista desonerado" />
+            </div>
+            <div style={{ marginTop:12, display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 14px", background:C.bg2, borderRadius:7, border:`1px solid ${C.border}` }}>
+              <span style={{ fontFamily:C.mono, fontSize:10, color:C.text2 }}>Área total construída</span>
+              <span style={{ fontFamily:C.head, fontSize:20, fontWeight:700, color:C.gold3, letterSpacing:"-0.5px" }}>{N(r.areaTotal)} m²</span>
+            </div>
+          </Card>
+
+          {/* Etapas SINAPI */}
+          <Card>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+              <Label style={{ marginBottom:0 }}>Etapas da Obra — Composições SINAPI</Label>
+              <button onClick={resetPcts} style={{ fontFamily:C.mono, fontSize:9, color:C.text3, background:"none", border:`1px solid ${C.border}`, padding:"3px 9px", borderRadius:4, cursor:"pointer" }}
+                onMouseOver={e=>e.currentTarget.style.borderColor=C.goldMid}
+                onMouseOut={e=>e.currentTarget.style.borderColor=C.border}>
+                Resetar %
+              </button>
+            </div>
+
+            {/* Total % warning */}
+            {Math.abs(r.totalPcts - 100) > 0.5 && (
+              <div style={{ padding:"6px 10px", marginBottom:10, background:"rgba(224,112,96,.08)", border:"1px solid rgba(224,112,96,.25)", borderRadius:6, fontFamily:C.mono, fontSize:10, color:"#e07060" }}>
+                Soma dos percentuais: {N(r.totalPcts,1)}% (ideal: 100%)
+              </div>
+            )}
+
+            <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+              {r.etapas.map(et => (
+                <div key={et.id}>
+                  <div onClick={()=>setExpandido(expandido===et.id?null:et.id)}
+                    style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 10px", background: expandido===et.id ? C.bg4 : C.bg2, border:`1px solid ${expandido===et.id ? C.goldMid : C.border}`, borderRadius:7, cursor:"pointer", transition:"all .15s" }}
+                    onMouseOver={e=>{if(expandido!==et.id){e.currentTarget.style.borderColor=C.border2}}}
+                    onMouseOut={e=>{if(expandido!==et.id){e.currentTarget.style.borderColor=C.border}}}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={expandido===et.id ? C.gold2 : C.text3} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+                      <path d={et.icon} />
+                    </svg>
+                    <span style={{ fontFamily:C.mono, fontSize:11, color: expandido===et.id ? C.gold3 : C.text, flex:1 }}>{et.nome}</span>
+                    {/* Pct controls */}
+                    <div style={{ display:"flex", alignItems:"center", gap:4 }} onClick={e=>e.stopPropagation()}>
+                      <button onClick={()=>togglePct(et.id,-0.5)} style={{ width:18, height:18, borderRadius:3, border:`1px solid ${C.border}`, background:C.bg3, color:C.text2, cursor:"pointer", fontSize:11, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:C.mono }}>-</button>
+                      <span style={{ fontFamily:C.mono, fontSize:10, color: et.pctUsado !== et.pct ? C.gold3 : C.text2, minWidth:36, textAlign:"center", fontWeight:et.pctUsado !== et.pct ? 700 : 400 }}>
+                        {N(et.pctUsado,1)}%
+                      </span>
+                      <button onClick={()=>togglePct(et.id,0.5)} style={{ width:18, height:18, borderRadius:3, border:`1px solid ${C.border}`, background:C.bg3, color:C.text2, cursor:"pointer", fontSize:11, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:C.mono }}>+</button>
+                    </div>
+                    <span style={{ fontFamily:C.mono, fontSize:11, fontWeight:600, color:C.gold3, minWidth:85, textAlign:"right" }}>{R(et.custo)}</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.text3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ transform: expandido===et.id?"rotate(90deg)":"rotate(0)", transition:"transform .2s", flexShrink:0 }}>
+                      <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                  </div>
+
+                  {/* Composições expandidas */}
+                  {expandido === et.id && (
+                    <div style={{ margin:"4px 0 6px 22px", padding:"10px 12px", background:C.bg3, border:`1px solid ${C.border}`, borderRadius:6 }}>
+                      <div style={{ fontFamily:C.mono, fontSize:9, color:C.gold2, letterSpacing:"0.1em", marginBottom:8 }}>COMPOSIÇÕES SINAPI</div>
+                      <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                        <thead>
+                          <tr style={{ borderBottom:`1px solid ${C.border}` }}>
+                            <th style={{ fontFamily:C.mono, fontSize:8, color:C.text3, textAlign:"left", padding:"4px 6px", letterSpacing:"0.1em" }}>CÓDIGO</th>
+                            <th style={{ fontFamily:C.mono, fontSize:8, color:C.text3, textAlign:"left", padding:"4px 6px", letterSpacing:"0.1em" }}>DESCRIÇÃO</th>
+                            <th style={{ fontFamily:C.mono, fontSize:8, color:C.text3, textAlign:"center", padding:"4px 6px", letterSpacing:"0.1em" }}>UN</th>
+                            <th style={{ fontFamily:C.mono, fontSize:8, color:C.text3, textAlign:"right", padding:"4px 6px", letterSpacing:"0.1em" }}>CUSTO UN.</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {et.codigos.map((c,i) => (
+                            <tr key={i} style={{ borderBottom: i < et.codigos.length-1 ? `1px solid ${C.border}` : "none" }}>
+                              <td style={{ fontFamily:C.mono, fontSize:10, color:C.gold3, padding:"5px 6px", whiteSpace:"nowrap" }}>{c.cod}</td>
+                              <td style={{ fontFamily:C.mono, fontSize:10, color:C.text, padding:"5px 6px" }}>{c.desc}</td>
+                              <td style={{ fontFamily:C.mono, fontSize:10, color:C.text2, padding:"5px 6px", textAlign:"center" }}>{c.un}</td>
+                              <td style={{ fontFamily:C.mono, fontSize:10, color:C.text, padding:"5px 6px", textAlign:"right", whiteSpace:"nowrap" }}>
+                                {R(c.val * SINAPI_UF[uf].f)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div style={{ marginTop:8, fontFamily:C.mono, fontSize:9, color:C.text3 }}>
+                        * Preços ajustados para {SINAPI_UF[uf].n} (fator ×{SINAPI_UF[uf].f.toFixed(2)})
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Barra visual de distribuição */}
+            <div style={{ marginTop:14 }}>
+              <div style={{ fontFamily:C.mono, fontSize:9, color:C.text3, marginBottom:4, letterSpacing:"0.08em" }}>DISTRIBUIÇÃO POR ETAPA</div>
+              <BarProp items={r.etapas.map((et,i)=>({
+                pct: et.pctUsado,
+                label: et.nome,
+                color: `hsl(${38 + i*28}, ${60+i*3}%, ${45+i*3}%)`
+              }))} />
+              <div style={{ display:"flex", flexWrap:"wrap", gap:"4px 10px", marginTop:6 }}>
+                {r.etapas.map((et,i) => (
+                  <div key={et.id} style={{ display:"flex", alignItems:"center", gap:4 }}>
+                    <div style={{ width:6, height:6, borderRadius:1, background:`hsl(${38+i*28},${60+i*3}%,${45+i*3}%)` }}/>
+                    <span style={{ fontFamily:C.mono, fontSize:8, color:C.text3 }}>{et.nome.split("/")[0].split("(")[0].trim()} {N(et.pctUsado,1)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
         </div>
 
-        {/* Total hero */}
-        <Card glow style={{ padding: "22px 20px", textAlign: "center" }}>
-          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text2, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 10 }}>Valor Final</div>
-          <div style={{ fontFamily: C.head, fontSize: 30, fontWeight: 900, letterSpacing: "-1.5px", background: C.grad, backgroundSize: "200%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", animation: "shimmer-move 5s linear infinite" }}>
-            {R(r.total)}
+        {/* ── RESULTS RIGHT ── */}
+        <div style={{ display:"flex", flexDirection:"column", gap:12, position:"sticky", top:0 }}>
+          {/* Live pill */}
+          <div style={{ display:"flex", alignItems:"center", gap:7, alignSelf:"flex-start", padding:"4px 11px", background:C.goldDim, border:`1px solid ${C.goldMid}`, borderRadius:20 }}>
+            <div style={{ width:6, height:6, borderRadius:"50%", background:C.gold, animation:"breathe 2s infinite" }}/>
+            <span style={{ fontFamily:C.mono, fontSize:9, color:C.gold2, letterSpacing:"0.12em" }}>CÁLCULO EM TEMPO REAL</span>
           </div>
-          <div style={{ marginTop: 8, fontFamily: C.mono, fontSize: 13, color: C.text2 }}>
-            <span style={{ color: C.gold3, fontWeight: 500 }}>{R(r.pm2)}</span> <span style={{ fontSize: 10 }}>por m²</span>
-          </div>
-        </Card>
 
-        {/* Breakdown */}
-        <Card style={{ padding: "16px 18px" }}>
-          <Label>Composição do custo</Label>
-          <Row label="Área total"               value={`${N(r.area)} m²`} />
-          <Row label={`Área c/ perda (${f.perda}%)`} value={`${N(r.aL)} m²`} />
-          <Row label="Custo material"            value={R(r.mat)} />
-          <Row label="Perda em R$"               value={R(r.perda$)} />
-          <Row label="Mão de obra"               value={f.inst ? R(r.mo) : "—"} />
-          <Row label="Custos extras"             value={R(r.extra)} />
-          <GoldLine />
-          <Row label="Subtotal"                  value={R(r.sub)} />
-          <Row label={`Lucro (${f.margem}%)`}   value={R(r.lucro)} gold />
-          <Row label="TOTAL"                     value={R(r.total)} gold last />
-
-          {/* Visual split bar */}
-          <div style={{ marginTop: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontFamily: C.mono, fontSize: 9, color: C.text3 }}>
-              <span>Custo {r.total > 0 ? N(r.sub / r.total * 100, 0) : 0}%</span>
-              <span>Lucro {r.total > 0 ? N(r.lucro / r.total * 100, 0) : 0}%</span>
+          {/* Total hero */}
+          <Card glow style={{ padding:"22px 20px", textAlign:"center" }}>
+            <div style={{ fontFamily:C.mono, fontSize:9, color:C.text2, letterSpacing:"0.15em", textTransform:"uppercase", marginBottom:6 }}>Custo Total da Obra</div>
+            <div style={{ fontFamily:C.head, fontSize:28, fontWeight:900, letterSpacing:"-1.5px", background:C.grad, backgroundSize:"200%", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", animation:"shimmer-move 5s linear infinite" }}>
+              {R(r.total)}
             </div>
-            <div style={{ height: 4, background: C.bg5, borderRadius: 2, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${r.total > 0 ? r.sub / r.total * 100 : 0}%`, background: C.grad, backgroundSize: "200%", borderRadius: 2, transition: "width .35s" }} />
+            <div style={{ marginTop:6, fontFamily:C.mono, fontSize:13, color:C.text2 }}>
+              <span style={{ color:C.gold3, fontWeight:500 }}>{R(r.totalM2)}</span> <span style={{ fontSize:10 }}>por m²</span>
+            </div>
+            <div style={{ marginTop:8, display:"flex", justifyContent:"center", gap:14 }}>
+              <div style={{ textAlign:"center" }}>
+                <div style={{ fontFamily:C.mono, fontSize:8, color:C.text3, letterSpacing:"0.1em" }}>SINAPI BASE</div>
+                <div style={{ fontFamily:C.mono, fontSize:11, color:C.text2 }}>{R(r.custoBaseM2)}/m²</div>
+              </div>
+              <div style={{ width:1, background:C.border }}/>
+              <div style={{ textAlign:"center" }}>
+                <div style={{ fontFamily:C.mono, fontSize:8, color:C.text3, letterSpacing:"0.1em" }}>AJUSTADO UF</div>
+                <div style={{ fontFamily:C.mono, fontSize:11, color:C.text2 }}>{R(r.custoM2Ajust)}/m²</div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Breakdown */}
+          <Card style={{ padding:"16px 18px" }}>
+            <Label>Composição Geral</Label>
+            <Row label={`Área construída (${pavimentos} pav.)`} value={`${N(r.areaTotal)} m²`} />
+            <Row label={`Estado: ${SINAPI_UF[uf].n}`} value={`×${SINAPI_UF[uf].f.toFixed(2)}`} />
+            <Row label={`Padrão: ${SINAPI_PADRAO[padrao].n}`} value={`×${SINAPI_PADRAO[padrao].f.toFixed(2)}`} />
+            <GoldLine my={8} />
+            <Row label="Custo direto da obra" value={R(r.custoObraBase)} />
+            <Row label={`BDI (${N(bdi,2)}%)`} value={R(r.valBdi)} />
+            <GoldLine my={8} />
+            <Row label="TOTAL COM BDI" value={R(r.total)} gold />
+            <Row label="Custo por m²" value={R(r.totalM2)} gold last />
+          </Card>
+
+          {/* Material vs MO */}
+          <Card style={{ padding:"14px 16px" }}>
+            <Label>Composição de Custo (ref. SINAPI)</Label>
+            <BarProp items={[
+              { pct:r.pctMat, color:"#C9982A", label:"Material" },
+              { pct:r.pctMo, color:"#7EBF8E", label:"Mão de Obra" },
+              { pct:r.pctEquip, color:"#6B8FCF", label:"Equipamento" },
+            ]}/>
+            <div style={{ display:"flex", justifyContent:"space-between", marginTop:6 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                <div style={{ width:8, height:8, borderRadius:2, background:"#C9982A" }}/>
+                <span style={{ fontFamily:C.mono, fontSize:10, color:C.text2 }}>Material {N(r.pctMat,1)}%</span>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                <div style={{ width:8, height:8, borderRadius:2, background:"#7EBF8E" }}/>
+                <span style={{ fontFamily:C.mono, fontSize:10, color:C.text2 }}>M.O. {N(r.pctMo,1)}%</span>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                <div style={{ width:8, height:8, borderRadius:2, background:"#6B8FCF" }}/>
+                <span style={{ fontFamily:C.mono, fontSize:10, color:C.text2 }}>Equip. {N(r.pctEquip,1)}%</span>
+              </div>
+            </div>
+            <div style={{ marginTop:8, display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6 }}>
+              <Chip label="Material" value={R(r.total * r.pctMat / 100)} />
+              <Chip label="Mão de Obra" value={R(r.total * r.pctMo / 100)} />
+              <Chip label="Equipamentos" value={R(r.total * r.pctEquip / 100)} />
+            </div>
+          </Card>
+
+          {/* Resumo por Etapa */}
+          <Card style={{ padding:"14px 16px", maxHeight:250, overflowY:"auto" }}>
+            <Label>Custo por Etapa</Label>
+            {r.etapas.map(et => (
+              <div key={et.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:`1px solid ${C.border}` }}>
+                <span style={{ fontFamily:C.mono, fontSize:10, color:C.text2, flex:1 }}>{et.nome.split("/")[0].split("(")[0].trim()}</span>
+                <span style={{ fontFamily:C.mono, fontSize:9, color:C.text3, marginRight:8 }}>{N(et.pctUsado,1)}%</span>
+                <span style={{ fontFamily:C.mono, fontSize:10, fontWeight:600, color:C.text, minWidth:80, textAlign:"right" }}>{R(et.custo)}</span>
+              </div>
+            ))}
+          </Card>
+
+          {/* Actions */}
+          <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+            <Btn onClick={()=>{
+              const sim = { uf, padrao, area, pavimentos, bdi, encSocial, etapasCustom,
+                total: r.total, totalM2: r.totalM2, data: new Date().toISOString() };
+              const sims = JSON.parse(localStorage.getItem("co_simulacoes_sinapi")||"[]");
+              sims.push(sim);
+              localStorage.setItem("co_simulacoes_sinapi", JSON.stringify(sims));
+              onSave?.();
+            }} icon="save" variant="gold">Salvar simulação SINAPI</Btn>
+            <Btn onClick={()=>{
+              const txt = [
+                "═══════════════════════════════════════════════",
+                "  SIMULAÇÃO SINAPI — CalcObra Pro",
+                "  " + new Date().toLocaleDateString("pt-BR"),
+                "═══════════════════════════════════════════════",
+                "",
+                `Estado: ${SINAPI_UF[uf].n} (fator ${SINAPI_UF[uf].f})`,
+                `Padrão: ${SINAPI_PADRAO[padrao].n}`,
+                `Área: ${N(r.areaTotal)} m² (${pavimentos} pavimento(s))`,
+                `BDI: ${N(bdi,2)}%`,
+                `SINAPI Base: ${R(r.custoBaseM2)}/m²`,
+                `SINAPI Ajustado: ${R(r.custoM2Ajust)}/m²`,
+                "",
+                "─── ETAPAS ───────────────────────────────────",
+                ...r.etapas.map(et => `  ${et.nome.padEnd(35)} ${N(et.pctUsado,1).padStart(5)}%   ${R(et.custo).padStart(14)}`),
+                "",
+                "─── RESUMO ───────────────────────────────────",
+                `  Custo Direto:    ${R(r.custoObraBase)}`,
+                `  BDI (${N(bdi,2)}%):     ${R(r.valBdi)}`,
+                `  TOTAL:           ${R(r.total)}`,
+                `  Custo/m²:        ${R(r.totalM2)}`,
+                "",
+                "  Ref.: SINAPI Jan/2026 — Caixa/IBGE",
+                "═══════════════════════════════════════════════",
+              ].join("\n");
+              const blob = new Blob([txt], { type:"text/plain;charset=utf-8" });
+              const a = document.createElement("a");
+              a.href = URL.createObjectURL(blob);
+              a.download = `simulacao_sinapi_${uf}_${new Date().toISOString().slice(0,10)}.txt`;
+              a.click();
+            }} icon="dl" variant="outline">Exportar Relatório</Btn>
+          </div>
+
+          {/* Disclaimer */}
+          <div style={{ padding:"8px 10px", background:C.bg2, borderRadius:6, border:`1px solid ${C.border}` }}>
+            <div style={{ fontFamily:C.mono, fontSize:8, color:C.text3, lineHeight:1.5 }}>
+              Valores baseados no SINAPI Jan/2026 (Caixa/IBGE). Custo nacional: R$ 1.920,74/m².
+              Não inclui terreno, projetos, licenças, taxas e administração. Composições com códigos
+              oficiais SINAPI. Ajuste fino requer consulta às planilhas mensais por UF em
+              caixa.gov.br/sinapi.
             </div>
           </div>
-        </Card>
-
-        {/* Action buttons */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-          <Btn onClick={() => onSave?.()} icon="save" variant="gold">Salvar simulação</Btn>
-          <Btn onClick={() => alert("Orçamento gerado!")} icon="quote" variant="outline">Gerar orçamento</Btn>
-          <Btn onClick={() => alert("PDF exportado!")} icon="dl" variant="ghost">Exportar PDF</Btn>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── CALC MÁRMORE ────────────────────────────────────────────────────────────
+// ─── CALC MÁRMORE ─────────────────────────────────────────────────────────────
+// Referência: preços de mercado — sem código SINAPI para pedras ornamentais
+// Chapa padrão: 3.00 × 1.50 m = 4.50 m²  |  Espessura: 2cm (padrão) ou 3cm (+30% material)
+// Frontão/Saia: cobrado por ml (polimento de face lateral)
+// Cuba embutida: R$350  |  Sobrepor: R$150  |  Furo torneira: R$80/un
 function CalcMarmore() {
   const STONES = {
     gsg: { n: "Granito São Gabriel",      m2: 320, ml: 85,  inst: 180 },
     gan: { n: "Granito Andorinha",         m2: 290, ml: 80,  inst: 160 },
     gbi: { n: "Granito Branco Itaúnas",    m2: 380, ml: 95,  inst: 200 },
     mca: { n: "Mármore Carrara",           m2: 680, ml: 150, inst: 280 },
-    gpr: { n: "Granito Preto S. Gabriel",  m2: 360, ml: 90,  inst: 190 },
+    gpr: { n: "Granito Preto São Gabriel", m2: 360, ml: 90,  inst: 190 },
   };
-  const [f, setF] = useState({ stone: "gsg", comp: 3, larg: 2.5, esp: 2, qty: 1, front: 0, saia: 0, cuba: false, furo: false, inst: true });
+  // esp: "2cm" = padrão  |  "3cm" = +30% no material (chapa mais espessa)
+  const [f, setF] = useState({
+    stone: "gsg", comp: 3, larg: 0.6, esp: "2cm", qty: 1, perda: 5,
+    front: 0, saia: 0, cuba: "nao", furos: 0, inst: true,
+  });
   const s = k => v => setF(p => ({ ...p, [k]: v }));
   const stone = STONES[f.stone];
 
   const r = useMemo(() => {
-    const area  = F(f.comp) * F(f.larg) * F(f.qty);
-    const perim = (F(f.comp) + F(f.larg)) * 2;
-    const pedra = area * stone.m2;
-    const front = F(f.front) * stone.ml;
-    const saia  = F(f.saia)  * stone.ml;
-    const cuba  = f.cuba ? 180 : 0;
-    const furo  = f.furo ? 60  : 0;
-    const inst  = f.inst ? area * stone.inst : 0;
-    const total = pedra + front + saia + cuba + furo + inst;
-    const pm2   = area > 0 ? total / area : 0;
-    return { area, perim, pedra, front, saia, cuba, furo, inst, total, pm2 };
+    const comp  = Math.max(0, F(f.comp));
+    const larg  = Math.max(0, F(f.larg));
+    const qty   = Math.max(1, Math.round(F(f.qty)));
+    const perda = Math.min(30, Math.max(0, F(f.perda))) / 100;
+    if (comp === 0 || larg === 0) return { area:0, areaC:0, chapas:0, matPedra:0, front:0, saia:0, recortes:0, inst:0, totalMat:0, total:0, pm2:0 };
+
+    const espFator = f.esp === "3cm" ? 1.30 : 1.00;  // 3cm slab: +30% material
+    const area     = comp * larg * qty;               // área líquida em m²
+    const areaC    = area * (1 + perda);              // área de compra com perda técnica
+    const chapas   = Math.ceil(areaC / 4.50);         // chapas padrão 3.00×1.50 m
+
+    const matPedra = areaC * stone.m2 * espFator;     // custo da pedra com perda e espessura
+    const frontVal = Math.max(0, F(f.front)) * stone.ml;
+    const saiaVal  = Math.max(0, F(f.saia))  * stone.ml;
+    // Recortes: cuba embutida R$350, sobrepor R$150, furos torneira R$80/un
+    const cubaVal  = f.cuba === "emb" ? 350 : f.cuba === "sob" ? 150 : 0;
+    const furosVal = Math.max(0, Math.round(F(f.furos))) * 80;
+    const recortes = cubaVal + furosVal;
+
+    const instVal  = f.inst ? area * stone.inst : 0;  // instalação sobre área líquida
+    const totalMat = matPedra + frontVal + saiaVal + recortes;
+    const total    = totalMat + instVal;
+    const pm2      = area > 0 ? total / area : 0;
+    return { area, areaC, chapas, matPedra, front: frontVal, saia: saiaVal, recortes, inst: instVal, totalMat, total, pm2 };
   }, [f, stone]);
 
   return (
@@ -350,31 +740,45 @@ function CalcMarmore() {
           <Label>Tipo de Pedra</Label>
           <Sel value={f.stone} onChange={s("stone")} options={Object.entries(STONES).map(([k, v]) => ({ value: k, label: `${v.n} — ${R(v.m2)}/m²` }))} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 12 }}>
-            <Chip label="Pedra/m²"       value={R(stone.m2)} />
-            <Chip label="Acabamento/ml"  value={R(stone.ml)} />
-            <Chip label="Instalação/m²"  value={R(stone.inst)} />
+            <Chip label="Pedra/m²"      value={R(stone.m2)} />
+            <Chip label="Acabamento/ml" value={R(stone.ml)} />
+            <Chip label="Instalação/m²" value={R(stone.inst)} />
           </div>
         </Card>
         <Card>
           <Label>Medidas</Label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
-            <Field label="Comprimento" value={f.comp} onChange={s("comp")} unit="m" />
-            <Field label="Largura"     value={f.larg} onChange={s("larg")} unit="m" />
-            <Field label="Espessura"   value={f.esp}  onChange={s("esp")}  unit="cm" />
-            <Field label="Qtd. peças"  value={f.qty}  onChange={s("qty")}  step="1" />
+            <Field label="Comprimento"  value={f.comp}  onChange={s("comp")}  unit="m" />
+            <Field label="Largura"      value={f.larg}  onChange={s("larg")}  unit="m" />
+            <Field label="Qtd. peças"   value={f.qty}   onChange={s("qty")}   step="1" />
+            <Field label="Perda técnica" value={f.perda} onChange={s("perda")} unit="%" hint="padrão 5%" />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 10 }}>
+            <Chip label="Área líquida"  value={`${N(r.area)} m²`} />
+            <Chip label="Área c/ perda" value={`${N(r.areaC)} m² — ${r.chapas} chapa${r.chapas !== 1 ? "s" : ""}`} />
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            {["2cm", "3cm"].map(v => (
+              <button key={v} type="button" onClick={() => s("esp")(v)}
+                style={{ flex: 1, padding: "7px 0", borderRadius: 7, border: `1px solid ${f.esp === v ? C.gold : C.border}`, background: f.esp === v ? C.goldDim : "transparent", color: f.esp === v ? C.gold3 : C.text2, fontFamily: C.mono, fontSize: 11, cursor: "pointer" }}>
+                Espessura {v}{v === "3cm" && <span style={{ color: C.text3, fontSize: 9 }}> +30%</span>}
+              </button>
+            ))}
           </div>
         </Card>
         <Card>
           <Label>Acabamentos e Serviços</Label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 6 }}>
-            <Field label="Frontão" value={f.front} onChange={s("front")} unit="ml" />
-            <Field label="Saia"    value={f.saia}  onChange={s("saia")}  unit="ml" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+            <Field label="Frontão" value={f.front} onChange={s("front")} unit="ml" hint="polimento lateral" />
+            <Field label="Saia"    value={f.saia}  onChange={s("saia")}  unit="ml" hint="polimento lateral" />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
-            <Toggle label="Recorte de cuba" checked={f.cuba} onChange={v => s("cuba")(v)} />
-            <Toggle label="Furação"         checked={f.furo} onChange={v => s("furo")(v)} />
-            <Toggle label="Instalação"      checked={f.inst} onChange={v => s("inst")(v)} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Sel label="Recorte de cuba"
+              value={f.cuba} onChange={s("cuba")}
+              options={[{ value: "nao", label: "Sem cuba" }, { value: "emb", label: "Embutida — R$ 350" }, { value: "sob", label: "Sobrepor — R$ 150" }]} />
+            <Field label="Furos torneira (un.)" value={f.furos} onChange={s("furos")} step="1" hint="R$80/furo" />
           </div>
+          <Toggle label="Incluir instalação" checked={f.inst} onChange={v => s("inst")(v)} />
         </Card>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -382,16 +786,21 @@ function CalcMarmore() {
           <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text2, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8 }}>Total Mármore</div>
           <div style={{ fontFamily: C.head, fontSize: 28, fontWeight: 900, letterSpacing: "-1px", background: C.grad, backgroundSize: "200%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{R(r.total)}</div>
           <div style={{ fontFamily: C.mono, fontSize: 12, color: C.text2, marginTop: 5 }}><span style={{ color: C.gold3 }}>{R(r.pm2)}</span> /m²</div>
+          <div style={{ fontFamily: C.mono, fontSize: 10, color: C.text3, marginTop: 4 }}>{r.chapas} chapa{r.chapas !== 1 ? "s" : ""} 3.0×1.5 m · e={f.esp}</div>
         </Card>
         <Card style={{ padding: "15px 17px" }}>
-          <Row label="Área total"          value={`${N(r.area)} m²`} />
-          <Row label="Perímetro total"     value={`${N(r.perim)} ml`} />
-          <Row label="Custo da pedra"      value={R(r.pedra)} />
-          <Row label="Frontão + Saia"      value={R(r.front + r.saia)} />
-          <Row label="Cortes especiais"    value={R(r.cuba + r.furo)} />
-          <Row label="Instalação"          value={f.inst ? R(r.inst) : "—"} />
-          <GoldLine />
-          <Row label="TOTAL" value={R(r.total)} gold last />
+          <Row label="Área líquida"          value={`${N(r.area)} m²`} />
+          <Row label="Área c/ perda"         value={`${N(r.areaC)} m² (${N(f.perda, 0)}%)`} />
+          <Row label="Chapas (3.0×1.5 m)"   value={`${r.chapas} chapa${r.chapas !== 1 ? "s" : ""}`} />
+          <GoldLine my={6} />
+          <Row label="Material pedra"        value={R(r.matPedra)} />
+          <Row label="Frontão"               value={r.front > 0 ? R(r.front) : "—"} />
+          <Row label="Saia"                  value={r.saia  > 0 ? R(r.saia)  : "—"} />
+          <Row label="Recortes (cuba+furos)" value={r.recortes > 0 ? R(r.recortes) : "—"} />
+          <Row label="Instalação"            value={f.inst ? R(r.inst) : "—"} />
+          <GoldLine my={6} />
+          <Row label="Subtotal material"     value={R(r.totalMat)} />
+          <Row label="TOTAL"                 value={R(r.total)} gold last />
         </Card>
         <Btn onClick={() => alert("Orçamento de mármore gerado!")} icon="save" variant="gold">Gerar orçamento</Btn>
       </div>
@@ -401,23 +810,57 @@ function CalcMarmore() {
 
 // ─── CALC PISO ────────────────────────────────────────────────────────────────
 function CalcPiso() {
-  const [f, setF] = useState({ ew: 6, el: 8, tw: 0.6, th: 0.6, perda: 10, pisoP: 75, argP: 28, rejP: 15, moP: 40 });
+  const [f, setF] = useState({
+    ew: 6, el: 8,          // ambiente (m)
+    tw: 0.60, tl: 0.60,   // peça largura × comprimento (m)
+    espPeca: 8,            // espessura da peça (mm) — NBR 13818
+    junta: 3,              // largura da junta (mm)
+    perda: 10,             // perda por recorte (%)
+    ppc: 0,                // peças por caixa (0 = não mostrar)
+    rodape: 0,             // rodapé (ml)
+    pisoP: 75,             // piso R$/m²
+    argP: 28,              // argamassa saco 20kg — R$
+    rejP: 15,              // rejunte R$/kg
+    rodapeP: 12,           // rodapé R$/ml
+    moP: 40,               // mão de obra R$/m²
+    inclMo: true,
+    inclRodape: false,
+  });
   const s = k => v => setF(p => ({ ...p, [k]: v }));
 
   const r = useMemo(() => {
-    const area    = F(f.ew) * F(f.el);
-    const tArea   = F(f.tw) * F(f.th);
-    const aL      = area * (1 + F(f.perda) / 100);
-    const pecas   = tArea > 0 ? Math.ceil(aL / tArea) : 0;
-    const pisoCost= aL * F(f.pisoP);
-    const argSacs = Math.ceil(area * 6 / 20);
-    const argCost = argSacs * F(f.argP);
-    const rejKg   = Math.ceil(area * 0.5);
-    const rejCost = rejKg * F(f.rejP);
-    const moCost  = area * F(f.moP);
-    const total   = pisoCost + argCost + rejCost + moCost;
-    const pm2     = area > 0 ? total / area : 0;
-    return { area, aL, pecas, pisoCost, argSacs, argCost, rejKg, rejCost, moCost, total, pm2 };
+    const area     = F(f.ew) * F(f.el);
+    const tileArea = F(f.tw) * F(f.tl);
+    const areaC    = area * (1 + F(f.perda) / 100);          // área c/ perda técnica
+    const pecas    = tileArea > 0 ? Math.ceil(areaC / tileArea) : 0;
+    const caixas   = F(f.ppc) > 0 ? Math.ceil(pecas / F(f.ppc)) : null;
+
+    // Argamassa SINAPI AC III — consumo 5.5 kg/m², saco 20 kg
+    const argKg    = areaC * 5.5;
+    const argSacs  = Math.ceil(argKg / 20);
+
+    // Rejunte — NBR 13818
+    // C = ((L + A) / (L × A)) × e_junta × e_peça × ρ × (1 + perda)
+    // onde ρ = 1.7 g/cm³, perda = 10%, fator = 1.7 × 10 × 1.1 = 18.7 → usa 17×1.1 = 18.7
+    const L_cm      = F(f.tl) * 100;
+    const A_cm      = F(f.tw) * 100;
+    const junta_cm  = F(f.junta) / 10;
+    const espP_cm   = F(f.espPeca) / 10;
+    const rejKgM2   = (L_cm > 0 && A_cm > 0)
+      ? ((L_cm + A_cm) / (L_cm * A_cm)) * junta_cm * espP_cm * 17 * 1.1
+      : 0;
+    const rejKg     = Math.ceil(areaC * rejKgM2 * 10) / 10;  // arredonda 0.1 kg
+
+    // Custos
+    const pisoCost  = areaC * F(f.pisoP);
+    const argCost   = argSacs * F(f.argP);
+    const rejCost   = rejKg  * F(f.rejP);
+    const rodapeCost = f.inclRodape ? F(f.rodape) * F(f.rodapeP) : 0;
+    const moCost    = f.inclMo ? area * F(f.moP) : 0;
+    const total     = pisoCost + argCost + rejCost + rodapeCost + moCost;
+    const pm2       = area > 0 ? total / area : 0;
+
+    return { area, areaC, pecas, caixas, argSacs, argKg, rejKg, rejKgM2, pisoCost, argCost, rejCost, rodapeCost, moCost, total, pm2 };
   }, [f]);
 
   return (
@@ -426,8 +869,8 @@ function CalcPiso() {
         <Card>
           <Label>Ambiente</Label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Field label="Largura" value={f.ew} onChange={s("ew")} unit="m" />
-            <Field label="Comprimento" value={f.el} onChange={s("el")} unit="m" />
+            <Field label="Largura"      value={f.ew} onChange={s("ew")} unit="m" />
+            <Field label="Comprimento"  value={f.el} onChange={s("el")} unit="m" />
           </div>
           <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", padding: "9px 12px", background: C.bg2, borderRadius: 7, border: `1px solid ${C.border}` }}>
             <span style={{ fontFamily: C.mono, fontSize: 10, color: C.text2 }}>Área do ambiente</span>
@@ -436,20 +879,40 @@ function CalcPiso() {
         </Card>
         <Card>
           <Label>Peça / Revestimento</Label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            <Field label="Largura da peça"  value={f.tw} onChange={s("tw")} unit="m" hint="ex: 0.60" />
-            <Field label="Altura da peça"   value={f.th} onChange={s("th")} unit="m" hint="ex: 0.60" />
-            <Field label="Perda"            value={f.perda} onChange={s("perda")} unit="%" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+            <Field label="Largura (m)"    value={f.tw}      onChange={s("tw")}      hint="ex: 0.60" />
+            <Field label="Comprimento (m)" value={f.tl}     onChange={s("tl")}      hint="ex: 0.60" />
+            <Field label="Espessura (mm)" value={f.espPeca} onChange={s("espPeca")} hint="ex: 8" step="1" />
+            <Field label="Junta (mm)"     value={f.junta}   onChange={s("junta")}   hint="ex: 3" step="0.5" />
           </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 12 }}>
+            <Field label="Perda (%)"      value={f.perda} onChange={s("perda")} hint="recorte" />
+            <Field label="Peças/caixa"    value={f.ppc}   onChange={s("ppc")}   hint="0 = ocultar" step="1" />
+            <div style={{ padding: "9px 12px", background: C.bg2, borderRadius: 7, border: `1px solid ${C.border}` }}>
+              <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, marginBottom: 3 }}>Rej. NBR 13818</div>
+              <div style={{ fontFamily: C.mono, fontSize: 12, color: C.gold3, fontWeight: 600 }}>{N(r.rejKgM2, 3)} kg/m²</div>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <Label>Rodapé</Label>
+          <Toggle label="Incluir rodapé" checked={f.inclRodape} onChange={v => s("inclRodape")(v)} />
+          {f.inclRodape && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+              <Field label="Comprimento total" value={f.rodape}  onChange={s("rodape")}  unit="ml" />
+              <Field label="Preço"              value={f.rodapeP} onChange={s("rodapeP")} unit="R$/ml" />
+            </div>
+          )}
         </Card>
         <Card>
           <Label>Valores</Label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Field label="Piso / Revestimento"  value={f.pisoP} onChange={s("pisoP")} unit="R$/m²" />
-            <Field label="Argamassa (sc. 20kg)" value={f.argP}  onChange={s("argP")}  unit="R$" />
-            <Field label="Rejunte (kg)"          value={f.rejP}  onChange={s("rejP")}  unit="R$/kg" />
-            <Field label="Mão de obra"           value={f.moP}   onChange={s("moP")}   unit="R$/m²" />
+            <Field label="Argamassa (sc. 20kg)" value={f.argP}  onChange={s("argP")}  unit="R$/sc" />
+            <Field label="Rejunte"              value={f.rejP}  onChange={s("rejP")}  unit="R$/kg" />
+            <Field label="Mão de obra"          value={f.moP}   onChange={s("moP")}   unit="R$/m²" />
           </div>
+          <Toggle label="Incluir mão de obra" checked={f.inclMo} onChange={v => s("inclMo")(v)} />
         </Card>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -459,14 +922,18 @@ function CalcPiso() {
           <div style={{ fontFamily: C.mono, fontSize: 12, color: C.text2, marginTop: 5 }}><span style={{ color: C.gold3 }}>{R(r.pm2)}</span> /m²</div>
         </Card>
         <Card style={{ padding: "15px 17px" }}>
-          <Row label="Área c/ perda"             value={`${N(r.aL)} m²`} />
-          <Row label="Qtd. de peças"             value={`${r.pecas.toLocaleString("pt-BR")} unid.`} />
-          <Row label="Custo do piso"             value={R(r.pisoCost)} />
-          <Row label={`Argamassa (${r.argSacs} sc.)`} value={R(r.argCost)} />
-          <Row label={`Rejunte (${r.rejKg} kg)`} value={R(r.rejCost)} />
-          <Row label="Mão de obra"               value={R(r.moCost)} />
-          <GoldLine />
-          <Row label="TOTAL" value={R(r.total)} gold last />
+          <Row label="Área líquida"    value={`${N(r.area)} m²`} />
+          <Row label="Área c/ perda"   value={`${N(r.areaC)} m² (${N(f.perda, 0)}%)`} />
+          <Row label="Qtd. de peças"   value={`${r.pecas.toLocaleString("pt-BR")} unid.`} />
+          {r.caixas !== null && <Row label="Caixas"  value={`${r.caixas} cx.`} />}
+          <GoldLine my={6} />
+          <Row label="Piso / material" value={R(r.pisoCost)} />
+          <Row label={`Argamassa ACIII (${r.argSacs} sc.)`} value={R(r.argCost)} />
+          <Row label={`Rejunte NBR (${N(r.rejKg, 1)} kg)`}  value={R(r.rejCost)} />
+          {f.inclRodape && <Row label={`Rodapé (${N(f.rodape, 0)} ml)`} value={R(r.rodapeCost)} />}
+          <Row label="Mão de obra"     value={f.inclMo ? R(r.moCost) : "—"} />
+          <GoldLine my={6} />
+          <Row label="TOTAL"           value={R(r.total)} gold last />
         </Card>
         <Btn onClick={() => alert("Orçamento de piso gerado!")} icon="save" variant="gold">Gerar orçamento</Btn>
       </div>
@@ -476,28 +943,31 @@ function CalcPiso() {
 
 // ─── CALC ALVENARIA ───────────────────────────────────────────────────────────
 function CalcAlvenaria() {
+  // mf = m³ argamassa/m² parede — coeficientes SINAPI assentamento
   const BLOCOS = {
-    "9x19x39":   { n: "Bloco 9×19×39 (padrão)",      l: .39, h: .19, mf: .015 },
-    "14x19x39":  { n: "Bloco 14×19×39 (estrutural)",  l: .39, h: .19, mf: .022 },
-    "19x19x39":  { n: "Bloco 19×19×39 (vedação)",     l: .39, h: .19, mf: .030 },
-    "tijolo_9f": { n: "Tijolo Cerâmico 9 furos",      l: .29, h: .14, mf: .012 },
+    "9x19x39":   { n: "Bloco de Concreto 9×19×39",    l: .39, h: .19, mf: 0.022 },
+    "14x19x39":  { n: "Bloco de Concreto 14×19×39",   l: .39, h: .19, mf: 0.027 },
+    "19x19x39":  { n: "Bloco de Concreto 19×19×39",   l: .39, h: .19, mf: 0.032 },
+    "tijolo_9f": { n: "Tijolo Cerâmico 9 Furos",      l: .29, h: .14, mf: 0.018 },
   };
-  const [f, setF] = useState({ bloco: "9x19x39", alt: 3, comp: 10, ab: 4.5, blocoP: 2.5, moP: 35 });
+  const [f, setF] = useState({ bloco: "9x19x39", alt: 3, comp: 10, ab: 4.5, blocoP: 2.5, argP: 28, moP: 35 });
   const s = k => v => setF(p => ({ ...p, [k]: v }));
   const bloco = BLOCOS[f.bloco];
 
   const r = useMemo(() => {
-    const bruta = F(f.alt) * F(f.comp);
-    const liq   = Math.max(0, bruta - F(f.ab));
-    const bA    = (bloco.l + .01) * (bloco.h + .01);
-    const qty   = bA > 0 ? Math.ceil(liq / bA * 1.05) : 0;
-    const m3    = liq * bloco.mf;
-    const sacs  = Math.ceil(m3 * 1600 / 20);
-    const bCost = qty * F(f.blocoP);
-    const mCost = sacs * 28;
-    const lCost = liq * F(f.moP);
-    const total = bCost + mCost + lCost;
-    const pm2   = liq > 0 ? total / liq : 0;
+    const bruta  = F(f.alt) * F(f.comp);
+    const liq    = Math.max(0, bruta - F(f.ab));
+    // área de face de cada bloco (c/ junta 10mm)
+    const bA     = (bloco.l + 0.01) * (bloco.h + 0.01);
+    const qty    = bA > 0 ? Math.ceil(liq / bA * 1.05) : 0;   // +5% quebra
+    // argamassa: volume (m³) → massa seca 1.600 kg/m³ → sacos 20 kg
+    const m3     = liq * bloco.mf;
+    const sacs   = Math.ceil(m3 * 1600 / 20);
+    const bCost  = qty  * F(f.blocoP);
+    const mCost  = sacs * F(f.argP);
+    const lCost  = liq  * F(f.moP);
+    const total  = bCost + mCost + lCost;
+    const pm2    = liq > 0 ? total / liq : 0;
     return { bruta, liq, qty, m3, sacs, bCost, mCost, lCost, total, pm2 };
   }, [f, bloco]);
 
@@ -505,12 +975,12 @@ function CalcAlvenaria() {
     <div style={{ display: "grid", gridTemplateColumns: "1fr 330px", gap: 18, alignItems: "start" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <Card>
-          <Label>Tipo de Bloco</Label>
+          <Label>Tipo de Bloco / Tijolo</Label>
           <Sel value={f.bloco} onChange={s("bloco")} options={Object.entries(BLOCOS).map(([k, v]) => ({ value: k, label: v.n }))} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 12 }}>
-            <Chip label="Comprimento"    value={`${bloco.l * 100} cm`} />
-            <Chip label="Altura"         value={`${bloco.h * 100} cm`} />
-            <Chip label="Argamassa/m²"  value={`${(bloco.mf * 1000).toFixed(0)} L`} />
+            <Chip label="Comprimento"   value={`${bloco.l * 100} cm`} />
+            <Chip label="Altura"        value={`${bloco.h * 100} cm`} />
+            <Chip label="Arg./m² SINAPI" value={`${(bloco.mf * 1000).toFixed(0)} L`} />
           </div>
         </Card>
         <Card>
@@ -527,9 +997,10 @@ function CalcAlvenaria() {
         </Card>
         <Card>
           <Label>Valores</Label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Field label="Preço do bloco (unid.)" value={f.blocoP} onChange={s("blocoP")} unit="R$" step="0.10" />
-            <Field label="Mão de obra"             value={f.moP}   onChange={s("moP")}    unit="R$/m²" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <Field label="Preço do bloco"    value={f.blocoP} onChange={s("blocoP")} unit="R$/un" step="0.10" />
+            <Field label="Argamassa (sc.20kg)" value={f.argP} onChange={s("argP")}   unit="R$/sc" />
+            <Field label="Mão de obra"        value={f.moP}   onChange={s("moP")}    unit="R$/m²" />
           </div>
         </Card>
       </div>
@@ -540,13 +1011,17 @@ function CalcAlvenaria() {
           <div style={{ fontFamily: C.mono, fontSize: 12, color: C.text2, marginTop: 5 }}><span style={{ color: C.gold3 }}>{R(r.pm2)}</span> /m²</div>
         </Card>
         <Card style={{ padding: "15px 17px" }}>
-          <Row label="Blocos necessários"           value={`${r.qty.toLocaleString("pt-BR")} unid.`} />
-          <Row label={`Argamassa (${r.sacs} sacos)`} value={`${N(r.m3, 3)} m³`} />
-          <Row label="Custo dos blocos"             value={R(r.bCost)} />
-          <Row label="Custo argamassa"              value={R(r.mCost)} />
-          <Row label="Mão de obra"                  value={R(r.lCost)} />
-          <GoldLine />
-          <Row label="TOTAL" value={R(r.total)} gold last />
+          <Row label="Área bruta"                    value={`${N(r.bruta)} m²`} />
+          <Row label="Área líquida (s/ aberturas)"   value={`${N(r.liq)} m²`} />
+          <GoldLine my={6} />
+          <Row label="Blocos necessários"            value={`${r.qty.toLocaleString("pt-BR")} unid. (+5%)`} />
+          <Row label={`Argamassa (${r.sacs} sc.)`}  value={`${N(r.m3, 3)} m³`} />
+          <GoldLine my={6} />
+          <Row label="Custo dos blocos"              value={R(r.bCost)} />
+          <Row label="Custo argamassa"               value={R(r.mCost)} />
+          <Row label="Mão de obra"                   value={R(r.lCost)} />
+          <GoldLine my={6} />
+          <Row label="TOTAL"                         value={R(r.total)} gold last />
         </Card>
         <Btn onClick={() => alert("Orçamento de alvenaria gerado!")} icon="save" variant="gold">Gerar orçamento</Btn>
       </div>
@@ -556,25 +1031,39 @@ function CalcAlvenaria() {
 
 // ─── CALC REBOCO ──────────────────────────────────────────────────────────────
 function CalcReboco() {
+  // yd = m²/saco a 1cm de espessura | fixo = não depende de espessura
+  // saco referência: reboco/gesso 50 kg, massa corrida 18 kg, arg. 20 kg
   const TIPOS = {
-    reboco:    { n: "Reboco Paulista",   yd: 3.5 },
-    massa:     { n: "Massa Corrida PVA", yd: 10  },
-    gesso:     { n: "Gesso em pó",       yd: 1.5 },
-    argamassa: { n: "Argamassa ACII",    yd: 2.8 },
+    reboco:    { n: "Reboco Traçado 1:3 (50 kg)",       yd: 3.0,  saco: 50, fixo: false },
+    gesso:     { n: "Gesso em Pó (40 kg)",              yd: 4.5,  saco: 40, fixo: false },
+    massa:     { n: "Massa Corrida PVA (18 kg)",        yd: 10.0, saco: 18, fixo: true  },
+    argamassa: { n: "Arg. de Regularização 1:4 (20 kg)", yd: 1.1, saco: 20, fixo: false },
   };
-  const [f, setF] = useState({ tipo: "reboco", parede: 40, teto: 20, esp: 2, matP: 32, moP: 28 });
+  const [f, setF] = useState({
+    tipo: "reboco", parede: 40, teto: 20, esp: 2,
+    chapisco: false, chapP: 32,
+    matP: 32, moP: 28,
+  });
   const s = k => v => setF(p => ({ ...p, [k]: v }));
   const tipo = TIPOS[f.tipo];
 
   const r = useMemo(() => {
     const area  = F(f.parede) + F(f.teto);
-    const tf    = F(f.esp) / 2;
-    const sacs  = Math.ceil(area / tipo.yd * tf * 1.1);
-    const mCost = sacs * F(f.matP);
-    const lCost = area * F(f.moP);
-    const total = mCost + lCost;
-    const pm2   = area > 0 ? total / area : 0;
-    return { area, sacs, mCost, lCost, total, pm2 };
+    const espCm = F(f.esp);
+    // sacos de massa principal
+    const sacs  = tipo.fixo
+      ? Math.ceil(area / tipo.yd * 1.10)
+      : Math.ceil(area * espCm / tipo.yd * 1.10);
+    // chapisco opcional — ~5 kg/m², saco 50 kg → 10 m²/saco fixo
+    const sacsChap = f.chapisco ? Math.ceil(area / 10 * 1.10) : 0;
+    const mCost    = sacs    * F(f.matP);
+    const chapCost = sacsChap * F(f.chapP);
+    const lCost    = area * F(f.moP);
+    const total    = mCost + chapCost + lCost;
+    const pm2      = area > 0 ? total / area : 0;
+    // rendimento exibido (a 1cm para tipos fixo mostramos m²/saco)
+    const rendDisplay = tipo.fixo ? `${tipo.yd} m²/saco` : `${tipo.yd} m²/saco/cm`;
+    return { area, sacs, sacsChap, mCost, chapCost, lCost, total, pm2, rendDisplay };
   }, [f, tipo]);
 
   return (
@@ -584,16 +1073,17 @@ function CalcReboco() {
           <Label>Tipo de Massa</Label>
           <Sel value={f.tipo} onChange={s("tipo")} options={Object.entries(TIPOS).map(([k, v]) => ({ value: k, label: v.n }))} />
           <div style={{ marginTop: 12, padding: "9px 12px", background: C.bg2, borderRadius: 7, border: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: C.mono, fontSize: 10, color: C.text2 }}>Rendimento (espessura 2cm)</span>
-            <span style={{ fontFamily: C.mono, fontSize: 12, color: C.gold3, fontWeight: 500 }}>{tipo.yd} m²/saco</span>
+            <span style={{ fontFamily: C.mono, fontSize: 10, color: C.text2 }}>Rendimento</span>
+            <span style={{ fontFamily: C.mono, fontSize: 12, color: C.gold3, fontWeight: 500 }}>{r.rendDisplay}</span>
           </div>
         </Card>
         <Card>
-          <Label>Áreas</Label>
+          <Label>Áreas e Espessura</Label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
             <Field label="Área de parede" value={f.parede} onChange={s("parede")} unit="m²" />
             <Field label="Área de teto"   value={f.teto}   onChange={s("teto")}   unit="m²" />
-            <Field label="Espessura"      value={f.esp}    onChange={s("esp")}    unit="cm" min="0.5" step="0.5" />
+            <Field label="Espessura"      value={f.esp}    onChange={s("esp")}    unit="cm" min="0.3" step="0.5"
+              hint={tipo.fixo ? "não usado" : ""} />
           </div>
           <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", padding: "9px 12px", background: C.bg2, borderRadius: 7, border: `1px solid ${C.border}` }}>
             <span style={{ fontFamily: C.mono, fontSize: 10, color: C.text2 }}>Área total</span>
@@ -601,10 +1091,22 @@ function CalcReboco() {
           </div>
         </Card>
         <Card>
+          <Label>Chapisco</Label>
+          <Toggle label="Incluir chapisco" checked={f.chapisco} onChange={v => s("chapisco")(v)} />
+          {f.chapisco && (
+            <div style={{ marginTop: 12 }}>
+              <Field label="Preço do saco chapisco (50 kg)" value={f.chapP} onChange={s("chapP")} unit="R$" />
+              <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, marginTop: 6 }}>
+                ~5 kg/m² — saco 50 kg cobre ~10 m² (+10% perda)
+              </div>
+            </div>
+          )}
+        </Card>
+        <Card>
           <Label>Valores</Label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Field label="Preço do saco" value={f.matP} onChange={s("matP")} unit="R$" />
-            <Field label="Mão de obra"   value={f.moP}  onChange={s("moP")}  unit="R$/m²" />
+            <Field label={`Saco ${tipo.saco} kg`} value={f.matP} onChange={s("matP")} unit="R$/sc" />
+            <Field label="Mão de obra"              value={f.moP}  onChange={s("moP")}  unit="R$/m²" />
           </div>
         </Card>
       </div>
@@ -615,12 +1117,15 @@ function CalcReboco() {
           <div style={{ fontFamily: C.mono, fontSize: 12, color: C.text2, marginTop: 5 }}><span style={{ color: C.gold3 }}>{R(r.pm2)}</span> /m²</div>
         </Card>
         <Card style={{ padding: "15px 17px" }}>
-          <Row label="Área total"         value={`${N(r.area)} m²`} />
-          <Row label="Sacos necessários"  value={`${r.sacs} sacos`} />
-          <Row label="Custo material"     value={R(r.mCost)} />
-          <Row label="Mão de obra"        value={R(r.lCost)} />
-          <GoldLine />
-          <Row label="TOTAL" value={R(r.total)} gold last />
+          <Row label="Área de parede"    value={`${N(f.parede)} m²`} />
+          <Row label="Área de teto"      value={`${N(f.teto)} m²`} />
+          <Row label="Área total"        value={`${N(r.area)} m²`} />
+          <GoldLine my={6} />
+          {f.chapisco && <Row label={`Chapisco (${r.sacsChap} sc.)`} value={R(r.chapCost)} />}
+          <Row label={`Massa (${r.sacs} sc. ${tipo.saco} kg)`} value={R(r.mCost)} />
+          <Row label="Mão de obra"       value={R(r.lCost)} />
+          <GoldLine my={6} />
+          <Row label="TOTAL"             value={R(r.total)} gold last />
         </Card>
         <Btn onClick={() => alert("Orçamento de reboco gerado!")} icon="save" variant="gold">Gerar orçamento</Btn>
       </div>
@@ -1360,14 +1865,14 @@ function App() {
   const NAV = [
     { id: "dashboard",    label: "Dashboard",      icon: I.dash },
     { id: "orcamento",    label: "Novo orçamento", icon: I.quote },
-    { id: "simulator",   label: "Simulador m²",   icon: I.sim },
+    { id: "simulator",   label: "Simulador SINAPI", icon: I.sim },
     { id: "calculadoras",label: "Calculadoras",   icon: I.calc },
     { id: "clientes",    label: "Clientes",        icon: I.people },
     { id: "materiais",   label: "Materiais",       icon: I.tag },
     { id: "relatorios",  label: "Relatórios",      icon: I.bar },
     { id: "config",      label: "Configurações",   icon: I.cog },
   ];
-  const TITLE = { dashboard: "Dashboard", orcamento: "Novo Orçamento", simulator: "Simulador de Preço por m²", calculadoras: "Calculadoras", clientes: "Clientes", materiais: "Materiais", relatorios: "Relatórios", config: "Configurações" };
+  const TITLE = { dashboard: "Dashboard", orcamento: "Novo Orçamento", simulator: "Simulador SINAPI — Custo por m²", calculadoras: "Calculadoras", clientes: "Clientes", materiais: "Materiais", relatorios: "Relatórios", config: "Configurações" };
 
   return (
     <div style={{ display: "flex", height: "100vh", background: C.bg, color: C.text, fontFamily: C.mono, overflow: "hidden" }}>

@@ -1,4 +1,4 @@
-$port = if ($env:PORT) { $env:PORT } else { '8099' }
+$port = if ($env:PORT) { $env:PORT } else { '8100' }
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $listener = [System.Net.HttpListener]::new()
 $listener.Prefixes.Add("http://localhost:${port}/")
