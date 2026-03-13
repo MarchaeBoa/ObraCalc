@@ -1165,25 +1165,31 @@ function Calculadoras() {
 
 // ─── DASHBOARD HOME ───────────────────────────────────────────────────────────
 function Dashboard({ onNav }) {
+  const orcamentos = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem("co_orcamentos") || "[]"); } catch { return []; }
+  }, []);
+  const clientes = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem("co_clientes") || "[]"); } catch { return []; }
+  }, []);
+
+  const total = orcamentos.reduce((s, o) => s + (o.total || 0), 0);
+  const ticket = orcamentos.length > 0 ? total / orcamentos.length : 0;
+
   const KPIS = [
-    { label: "Orçamentos do mês",    value: "47",         sub: "+12% vs anterior",    icon: I.quote },
-    { label: "Valor total simulado", value: "R$ 284.750", sub: "32 simulações ativas", icon: I.trend },
-    { label: "Ticket médio",         value: "R$ 6.059",   sub: "por orçamento",        icon: I.zap },
-    { label: "Clientes cadastrados", value: "138",         sub: "+5 esta semana",       icon: I.people },
+    { label: "Orçamentos do mês",    value: String(orcamentos.length), sub: orcamentos.length === 0 ? "Nenhum ainda" : `${orcamentos.length} orçamento${orcamentos.length !== 1 ? "s" : ""}`, icon: I.quote },
+    { label: "Valor total simulado", value: R(total),                   sub: orcamentos.length === 0 ? "Crie seu primeiro orçamento" : `${orcamentos.length} simulações`, icon: I.trend },
+    { label: "Ticket médio",         value: R(ticket),                   sub: "por orçamento",        icon: I.zap },
+    { label: "Clientes cadastrados", value: String(clientes.length),     sub: clientes.length === 0 ? "Nenhum ainda" : `${clientes.length} cliente${clientes.length !== 1 ? "s" : ""}`, icon: I.people },
   ];
 
-  const ORC = [
-    { id: "#0047", cli: "Construtora Horizonte",   srv: "Mármore Carrara — Bancadas",    area: "24 m²",  val: "R$ 18.420", st: "ok" },
-    { id: "#0046", cli: "Reforma Silva & Cia",      srv: "Porcelanato 60×60 — Sala",      area: "68 m²",  val: "R$ 12.240", st: "pend" },
-    { id: "#0045", cli: "Eng. Roberto Dias",        srv: "Alvenaria + Reboco — Galpão",   area: "340 m²", val: "R$ 48.600", st: "ok" },
-    { id: "#0044", cli: "Residencial Torres",       srv: "Granito São Gabriel — Escada",  area: "18 m²",  val: "R$ 9.800",  st: "rev" },
-    { id: "#0043", cli: "Hotel Meridian",           srv: "Mármore Travertino — Hall",     area: "95 m²",  val: "R$ 87.400", st: "ok" },
-  ];
   const ST = {
-    ok:   { label: "Aprovado", color: "#7EBF8E", bg: "rgba(126,191,142,.1)",  border: "rgba(126,191,142,.25)" },
-    pend: { label: "Pendente", color: C.gold3,   bg: C.goldDim,               border: C.goldMid },
-    rev:  { label: "Revisão",  color: "#E07B54", bg: "rgba(224,123,84,.1)",   border: "rgba(224,123,84,.25)" },
+    aprovado:  { label: "Aprovado", color: "#7EBF8E", bg: "rgba(126,191,142,.1)",  border: "rgba(126,191,142,.25)" },
+    enviado:   { label: "Pendente", color: C.gold3,   bg: C.goldDim,               border: C.goldMid },
+    rascunho:  { label: "Rascunho", color: C.text2,   bg: "rgba(138,128,112,.1)",  border: "rgba(138,128,112,.25)" },
+    recusado:  { label: "Recusado", color: "#E07B54", bg: "rgba(224,123,84,.1)",   border: "rgba(224,123,84,.25)" },
   };
+
+  const recentes = orcamentos.slice(0, 5);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -1204,7 +1210,7 @@ function Dashboard({ onNav }) {
         ))}
       </div>
 
-      {/* Quick access — matching landing's bento grid concept */}
+      {/* Quick access */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
         {[
           { label: "Nova Simulação",   desc: "Calcular preço por m²",    icon: I.sim,    page: "simulator" },
@@ -1230,36 +1236,44 @@ function Dashboard({ onNav }) {
           <span style={{ fontFamily: C.head, fontSize: 13, fontWeight: 900, color: C.text, letterSpacing: "-0.3px" }}>Orçamentos Recentes</span>
           <button onClick={() => onNav("orcamento")} style={{ fontFamily: C.mono, fontSize: 10, color: C.gold2, background: "none", border: "none", cursor: "pointer", letterSpacing: "0.05em" }}>VER TODOS →</button>
         </div>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: C.bg2 }}>
-              {["Nº", "Cliente", "Serviço", "Área", "Valor", "Status"].map(h => (
-                <th key={h} style={{ padding: "9px 18px", textAlign: "left", fontFamily: C.mono, fontSize: 9, fontWeight: 500, color: C.text3, letterSpacing: "0.1em", textTransform: "uppercase" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {ORC.map(o => {
-              const st = ST[o.st];
-              return (
-                <tr key={o.id} style={{ borderTop: `1px solid ${C.border}`, transition: "background .12s" }}
-                  onMouseOver={e => e.currentTarget.style.background = C.bg2}
-                  onMouseOut={e => e.currentTarget.style.background = "transparent"}>
-                  <td style={{ padding: "11px 18px", fontFamily: C.mono, fontSize: 11, color: C.text3 }}>{o.id}</td>
-                  <td style={{ padding: "11px 18px", fontFamily: C.mono, fontSize: 12, fontWeight: 600, color: C.text }}>{o.cli}</td>
-                  <td style={{ padding: "11px 18px", fontFamily: C.mono, fontSize: 11, color: C.text2 }}>{o.srv}</td>
-                  <td style={{ padding: "11px 18px", fontFamily: C.mono, fontSize: 11, color: C.text2 }}>{o.area}</td>
-                  <td style={{ padding: "11px 18px", fontFamily: C.mono, fontSize: 12, fontWeight: 700, color: C.gold3 }}>{o.val}</td>
-                  <td style={{ padding: "11px 18px" }}>
-                    <span style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.07em", background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>
-                      {st.label}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {recentes.length === 0 ? (
+          <div style={{ padding: "40px 18px", textAlign: "center" }}>
+            <Ic d={I.quote} size={28} color={C.text3} />
+            <div style={{ fontFamily: C.mono, fontSize: 12, color: C.text3, marginTop: 12 }}>Nenhum orçamento ainda</div>
+            <button onClick={() => onNav("orcamento")} style={{ marginTop: 14, fontFamily: C.mono, fontSize: 11, color: C.gold2, background: C.goldDim, border: `1px solid ${C.goldMid}`, borderRadius: 6, padding: "8px 18px", cursor: "pointer" }}>+ Criar primeiro orçamento</button>
+          </div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: C.bg2 }}>
+                {["Nº", "Cliente", "Serviço", "Área", "Valor", "Status"].map(h => (
+                  <th key={h} style={{ padding: "9px 18px", textAlign: "left", fontFamily: C.mono, fontSize: 9, fontWeight: 500, color: C.text3, letterSpacing: "0.1em", textTransform: "uppercase" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {recentes.map(o => {
+                const st = ST[o.status] || ST.rascunho;
+                return (
+                  <tr key={o.id} style={{ borderTop: `1px solid ${C.border}`, transition: "background .12s" }}
+                    onMouseOver={e => e.currentTarget.style.background = C.bg2}
+                    onMouseOut={e => e.currentTarget.style.background = "transparent"}>
+                    <td style={{ padding: "11px 18px", fontFamily: C.mono, fontSize: 11, color: C.text3 }}>{o.id}</td>
+                    <td style={{ padding: "11px 18px", fontFamily: C.mono, fontSize: 12, fontWeight: 600, color: C.text }}>{o.cliente}</td>
+                    <td style={{ padding: "11px 18px", fontFamily: C.mono, fontSize: 11, color: C.text2 }}>{o.servico}</td>
+                    <td style={{ padding: "11px 18px", fontFamily: C.mono, fontSize: 11, color: C.text2 }}>{N(o.area || 0, 0)} m²</td>
+                    <td style={{ padding: "11px 18px", fontFamily: C.mono, fontSize: 12, fontWeight: 700, color: C.gold3 }}>{R(o.total)}</td>
+                    <td style={{ padding: "11px 18px" }}>
+                      <span style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700, padding: "3px 10px", borderRadius: 20, letterSpacing: "0.07em", background: st.bg, border: `1px solid ${st.border}`, color: st.color }}>
+                        {st.label}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </Card>
     </div>
   );
