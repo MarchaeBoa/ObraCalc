@@ -696,13 +696,11 @@ nav.stuck{
 }
 .tc-feat .tc-author{border-color:rgba(201,152,42,.2)}
 .tav{
-  width:44px;height:44px;border-radius:var(--r8);
-  background:linear-gradient(135deg,var(--gold),var(--gold3));
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:800;color:#030303;flex-shrink:0;
+  width:48px;height:48px;border-radius:50%;
+  object-fit:cover;
+  border:2px solid rgba(201,152,42,.35);
+  flex-shrink:0;
 }
-.tav-b{background:linear-gradient(135deg,#2a5a8a,#5090c0);color:white}
-.tav-c{background:linear-gradient(135deg,#2a7a4a,#50aa70);color:white}
 .t-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;font-family:'DM Mono',monospace}
 .t-role{font-size:11.5px;color:var(--text2)}
 .t-stars{font-size:13px;color:var(--gold2);margin-top:4px;letter-spacing:3px}
@@ -1399,7 +1397,7 @@ footer{
         <div class="tq">"</div>
         <p class="tc-text">Nossa taxa de fechamento subiu 40%. Entregamos orçamentos muito mais rápido e com uma apresentação que impressiona o cliente antes mesmo de falar o preço.</p>
         <div class="tc-author">
-          <div class="tav">MR</div>
+          <img class="tav" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Marcos Rodrigues"/>
           <div>
             <div class="t-name">Marcos Rodrigues</div>
             <div class="t-role">Sócio · Rodrigues Marmoraria, SP</div>
@@ -1411,7 +1409,7 @@ footer{
         <div class="tq">"</div>
         <p class="tc-text">A plataforma elevou o nível de toda a nossa operação. Passamos mais confiança ao cliente, fechamos mais contratos e reduzimos os erros de metragem a zero. Simplesmente essencial para qualquer empresa da construção civil.</p>
         <div class="tc-author">
-          <div class="tav tav-b">CB</div>
+          <img class="tav" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Carla Bettini"/>
           <div>
             <div class="t-name">Carla Bettini</div>
             <div class="t-role">Diretora Comercial · Construtora Bettini, MG</div>
@@ -1423,7 +1421,7 @@ footer{
         <div class="tq">"</div>
         <p class="tc-text">Antes levava 3 horas por orçamento de mármore. Hoje faço em 4 minutos com cálculo preciso e PDF que parece de uma empresa muito maior. Indispensável.</p>
         <div class="tc-author">
-          <div class="tav tav-c">JP</div>
+          <img class="tav" src="https://randomuser.me/api/portraits/men/75.jpg" alt="João Paulo Saraiva"/>
           <div>
             <div class="t-name">João Paulo Saraiva</div>
             <div class="t-role">Proprietário · Saraiva Mármores, RS</div>
@@ -1761,7 +1759,8 @@ document.querySelectorAll('.bc').forEach(card=>{
 
 <!-- ═══════════════════════════════════════ AUTH MODAL ═══════════════════════════════════════ -->
 <div id="auth-overlay" style="display:none;position:fixed;inset:0;z-index:99000;align-items:center;justify-content:center">
-  <div onclick="closeAuth()" style="position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)"></div>
+  <div onclick="closeAuth()" style="position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=1920&q=80') center/cover no-repeat;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)"></div>
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.55);pointer-events:none"></div>
   <div id="auth-modal" style="position:relative;z-index:2;width:100%;max-width:460px;margin:20px;background:#0d0d0d;border:1px solid rgba(201,152,42,.22);border-radius:20px;box-shadow:0 40px 100px rgba(0,0,0,.85),0 0 60px rgba(201,152,42,.1);overflow:hidden">
     <div style="height:2px;background:linear-gradient(90deg,transparent,#C9982A 20%,#F8DC82 50%,#C9982A 80%,transparent)"></div>
     <div style="padding:36px 40px 40px">
@@ -1834,7 +1833,7 @@ document.querySelectorAll('.bc').forEach(card=>{
           <input id="rg-terms" type="checkbox" style="margin-top:2px;accent-color:#C9982A;width:15px;height:15px;flex-shrink:0"/>
           <span style="font-size:11.5px;color:#8A8070;font-family:'DM Mono',monospace;line-height:1.5">Concordo com os <a href="#" style="color:#C9982A">Termos de Uso</a> e <a href="#" style="color:#C9982A">Política de Privacidade</a></span>
         </label>
-        <button type="button" onclick="doRegister()" style="width:100%;padding:14px;background:linear-gradient(135deg,#C9982A,#EEC85A,#C9982A);background-size:200%;border:none;border-radius:8px;color:#030303;font-weight:800;font-size:13.5px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 24px rgba(201,152,42,.3)">Criar conta e verificar e-mail</button>
+        <button type="button" onclick="doRegister()" style="width:100%;padding:14px;background:linear-gradient(135deg,#C9982A,#EEC85A,#C9982A);background-size:200%;border:none;border-radius:8px;color:#030303;font-weight:800;font-size:13.5px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 24px rgba(201,152,42,.3)">Criar conta</button>
         <p style="text-align:center;font-size:12.5px;color:#8A8070;font-family:'DM Mono',monospace;margin-top:18px">Já tem conta? <a href="#" onclick="showView('login');return false" style="color:#C9982A;text-decoration:none;font-weight:600">Entrar →</a></p>
       </div>
 
@@ -2082,22 +2081,6 @@ window.doLogin = function() {
     }
   }
   if (!user) {
-    var unverified = users.some(function(u){ return u.email === email && !u.ok; });
-    if (unverified) {
-      /* ── conta existe mas não verificada: reabrir fluxo de verificação ── */
-      var pending = JSON.parse(localStorage.getItem('co_pending') || 'null');
-      if (pending && pending.email === email) {
-        S.name    = pending.name;
-        S.company = pending.company;
-        S.email   = pending.email;
-        S.pass    = pending.pass;
-        S.codeAt  = Date.now();
-        showView('sending');
-        genCode(pending.email, pending.name);
-        return;
-      }
-      return showErr('err-login', '⚠ E-mail não confirmado. Crie a conta novamente para receber um novo código.');
-    }
     return showErr('err-login', '⚠ E-mail ou senha incorretos.');
   }
 
@@ -2131,18 +2114,17 @@ window.doRegister = function() {
   if (users.some(function(u){ return u.email === email; }))
     return showErr('err-reg','⚠ E-mail já cadastrado. Faça login.');
 
-  /* ── salva pendente e inicia verificação de e-mail ── */
-  S.name    = name;
-  S.company = co;
-  S.email   = email;
-  S.pass    = btoa(unescape(encodeURIComponent(pass)));
-  S.codeAt  = Date.now();
+  /* ── cadastro direto (sem verificação de e-mail) ── */
+  var encPass = btoa(unescape(encodeURIComponent(pass)));
 
-  /* persiste pendente para sobreviver reload acidental */
-  localStorage.setItem('co_pending', JSON.stringify({ name:name, company:co, email:email, pass:S.pass, at:new Date().toISOString() }));
+  users.push({ name:name, company:co, email:email, pass:encPass, ok:true, plan:'free', at:new Date().toISOString() });
+  localStorage.setItem('co_users', JSON.stringify(users));
 
-  showView('sending');
-  genCode(email, name);
+  localStorage.setItem('co_logged', JSON.stringify({ name:name, email:email, company:co }));
+  localStorage.removeItem('co_pending');
+
+  toastMsg('✅ Conta criada! Bem-vindo, ' + name + '!', 'success');
+  setTimeout(function(){ window.location.href = 'dashboard.html'; }, 800);
 };
 
 /* ── GENERATE & SEND VERIFICATION CODE ────── */

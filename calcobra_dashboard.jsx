@@ -1916,13 +1916,14 @@ function App() {
             <div style={{ fontFamily: C.mono, fontSize: 11, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName}</div>
             <div style={{ fontFamily: C.mono, fontSize: 9, color: C.gold, letterSpacing: "0.06em" }}>Plano Free</div>
           </div>
-          <button type="button" onClick={doLogout} title="Sair" style={{ background: "none", border: "none", cursor: "pointer", color: C.text2, padding: 4, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}
-            onMouseOver={e => { e.currentTarget.style.color = "#e07060"; e.currentTarget.style.background = "rgba(224,112,96,.1)"; }}
-            onMouseOut={e => { e.currentTarget.style.color = C.text2; e.currentTarget.style.background = "none"; }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          </button>
         </div>
+        <button type="button" onClick={doLogout} style={{ display: "flex", alignItems: "center", gap: 8, width: "calc(100% - 16px)", margin: "0 8px 10px", padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(224,112,96,.15)", cursor: "pointer", background: "rgba(224,112,96,.06)", color: "#e07060", fontFamily: C.mono, fontSize: 11, fontWeight: 500, transition: "all .14s" }}
+          onMouseOver={e => { e.currentTarget.style.background = "rgba(224,112,96,.14)"; e.currentTarget.style.borderColor = "rgba(224,112,96,.3)"; }}
+          onMouseOut={e => { e.currentTarget.style.background = "rgba(224,112,96,.06)"; e.currentTarget.style.borderColor = "rgba(224,112,96,.15)"; }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sair da conta
+        </button>
       </aside>
 
       {/* ── MAIN ── */}
