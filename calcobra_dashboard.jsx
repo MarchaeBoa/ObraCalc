@@ -1973,6 +1973,244 @@ const Paywall = ({ type, used }) => {
   );
 };
 
+// ─── AI ASSISTANT MASCOT ──────────────────────────────────────────────────────
+function AiAssistant() {
+  const [open, setOpen] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [chat, setChat] = useState([
+    { from: "bot", text: "Olá! Sou o assistente de obras da CalcObra. Posso ajudar com metragem, orçamento, materiais e cálculos de construção. Como posso te ajudar?" }
+  ]);
+  const [typing, setTyping] = useState(false);
+  const [tooltip, setTooltip] = useState(true);
+
+  // Hide tooltip after 6s
+  useEffect(() => {
+    const t = setTimeout(() => setTooltip(false), 6000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const QUICK = [
+    "Como calcular m² de piso?",
+    "Quanto custa o m² de alvenaria?",
+    "Como fazer um orçamento?",
+  ];
+
+  const getResponse = (q) => {
+    const ql = q.toLowerCase();
+    if (ql.includes("m²") && (ql.includes("piso") || ql.includes("calcular")))
+      return "Para calcular m² de piso: multiplique o comprimento pela largura do ambiente. Ex: sala de 5m × 4m = 20m². Adicione 10% de perda técnica = 22m². Use nossa Calculadora de Piso para um cálculo detalhado!";
+    if (ql.includes("alvenaria") && ql.includes("custo"))
+      return "O custo médio de alvenaria varia de R$ 45 a R$ 85/m² (material + mão de obra), dependendo do bloco e da região. Use nosso Simulador SINAPI para valores atualizados por estado.";
+    if (ql.includes("orçamento") || ql.includes("orcamento"))
+      return "Para criar um orçamento: vá em 'Novo Orçamento', preencha cliente, serviço, área (m²), valor do material por m², mão de obra e margem de lucro. O sistema calcula tudo automaticamente!";
+    if (ql.includes("mármore") || ql.includes("marmore") || ql.includes("granito"))
+      return "Para calcular mármore/granito: use a Calculadora de Mármore. Informe comprimento, largura, espessura e tipo de pedra. Ela calcula chapas necessárias, acabamentos e custo total com instalação.";
+    if (ql.includes("sinapi"))
+      return "O SINAPI (Sistema Nacional de Pesquisa de Custos e Índices) é a referência oficial para custos de construção no Brasil. Use nosso Simulador SINAPI para calcular custos por m² ajustados ao seu estado e padrão construtivo.";
+    if (ql.includes("reboco"))
+      return "O consumo médio de argamassa para reboco é de 15 a 20 litros/m², com espessura de 2cm. Use a Calculadora de Reboco para um cálculo preciso com base na área da parede.";
+    if (ql.includes("material") || ql.includes("materiais"))
+      return "Na seção 'Materiais' você pode cadastrar sua tabela de preços personalizada com nome, unidade e valor. Isso facilita a criação de orçamentos mais precisos.";
+    if (ql.includes("ajuda") || ql.includes("help") || ql.includes("o que"))
+      return "Posso te ajudar com: cálculos de m², orçamentos, simulações SINAPI, dúvidas sobre mármore/piso/alvenaria/reboco, materiais e planejamento de obra. É só perguntar!";
+    return "Boa pergunta! Para um cálculo mais preciso, recomendo usar nossas ferramentas: Simulador SINAPI para custos por m², Calculadoras para materiais específicos, ou Novo Orçamento para propostas completas. Posso explicar alguma dessas?";
+  };
+
+  const handleSend = (text) => {
+    const q = text || msg;
+    if (!q.trim()) return;
+    setChat(prev => [...prev, { from: "user", text: q.trim() }]);
+    setMsg("");
+    setTyping(true);
+    setTimeout(() => {
+      setChat(prev => [...prev, { from: "bot", text: getResponse(q.trim()) }]);
+      setTyping(false);
+    }, 800 + Math.random() * 600);
+  };
+
+  return (
+    <>
+      {/* Tooltip bubble */}
+      {!open && tooltip && (
+        <div style={{
+          position: "fixed", bottom: 80, right: 24, zIndex: 9998,
+          background: C.bg3, border: `1px solid ${C.goldMid}`, borderRadius: 10,
+          padding: "10px 14px", maxWidth: 220, boxShadow: `0 4px 20px rgba(0,0,0,.5)`,
+          animation: "fadeInUp .4s ease",
+        }}>
+          <div style={{ fontFamily: C.mono, fontSize: 11, color: C.text, lineHeight: 1.5 }}>
+            Posso ajudar com metragem e orçamento?
+          </div>
+          <div style={{
+            position: "absolute", bottom: -6, right: 22, width: 12, height: 12,
+            background: C.bg3, borderRight: `1px solid ${C.goldMid}`, borderBottom: `1px solid ${C.goldMid}`,
+            transform: "rotate(45deg)",
+          }} />
+        </div>
+      )}
+
+      {/* Chat window */}
+      {open && (
+        <div style={{
+          position: "fixed", bottom: 80, right: 24, zIndex: 9998,
+          width: 340, height: 440, borderRadius: 14,
+          background: C.bg2, border: `1px solid ${C.border2}`,
+          display: "flex", flexDirection: "column", overflow: "hidden",
+          boxShadow: `0 8px 40px rgba(0,0,0,.6), 0 0 30px ${C.goldDim}`,
+          animation: "fadeInUp .25s ease",
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: "14px 16px", borderBottom: `1px solid ${C.border}`,
+            background: `linear-gradient(135deg, ${C.bg3}, ${C.bg4})`,
+            display: "flex", alignItems: "center", gap: 10,
+          }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: 10, background: C.goldDim,
+              border: `1px solid ${C.goldMid}`, display: "flex", alignItems: "center",
+              justifyContent: "center", flexShrink: 0,
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.gold2} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a7 7 0 0 1 7 7c0 3-1.5 5-3 6.5V18H8v-2.5C6.5 14 5 12 5 9a7 7 0 0 1 7-7z"/>
+                <path d="M9 22h6"/><path d="M10 18v2"/><path d="M14 18v2"/>
+                <circle cx="9" cy="9" r="1" fill={C.gold2}/><circle cx="15" cy="9" r="1" fill={C.gold2}/>
+                <path d="M9.5 13a3.5 3.5 0 0 0 5 0"/>
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: C.head, fontSize: 12, fontWeight: 900, color: C.text, letterSpacing: "-0.3px" }}>Assistente de Obras</div>
+              <div style={{ fontFamily: C.mono, fontSize: 9, color: C.green, display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.green }} /> Online
+              </div>
+            </div>
+            <button onClick={() => setOpen(false)} style={{
+              background: "none", border: "none", cursor: "pointer", padding: 4,
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.text3} strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          {/* Messages */}
+          <div ref={el => { if (el) el.scrollTop = el.scrollHeight; }} style={{
+            flex: 1, overflow: "auto", padding: "14px 14px 8px", display: "flex",
+            flexDirection: "column", gap: 10,
+          }}>
+            {chat.map((m, i) => (
+              <div key={i} style={{
+                display: "flex", justifyContent: m.from === "user" ? "flex-end" : "flex-start",
+              }}>
+                <div style={{
+                  maxWidth: "82%", padding: "9px 13px", borderRadius: 10,
+                  fontFamily: C.mono, fontSize: 11, lineHeight: 1.6,
+                  ...(m.from === "user" ? {
+                    background: C.goldDim, border: `1px solid ${C.goldMid}`, color: C.text,
+                    borderBottomRightRadius: 3,
+                  } : {
+                    background: C.bg4, border: `1px solid ${C.border}`, color: C.text2,
+                    borderBottomLeftRadius: 3,
+                  }),
+                }}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {typing && (
+              <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                <div style={{
+                  padding: "10px 16px", borderRadius: 10, background: C.bg4,
+                  border: `1px solid ${C.border}`, borderBottomLeftRadius: 3,
+                  fontFamily: C.mono, fontSize: 11, color: C.text3,
+                  animation: "breathe 1.2s infinite",
+                }}>
+                  Digitando...
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick replies */}
+          {chat.length <= 2 && (
+            <div style={{ padding: "0 14px 8px", display: "flex", flexWrap: "wrap", gap: 5 }}>
+              {QUICK.map(q => (
+                <button key={q} onClick={() => handleSend(q)} style={{
+                  padding: "5px 10px", borderRadius: 6, background: C.goldDim,
+                  border: `1px solid ${C.goldMid}`, color: C.gold3,
+                  fontFamily: C.mono, fontSize: 9, cursor: "pointer",
+                  transition: "all .15s",
+                }}
+                onMouseOver={e => e.currentTarget.style.background = "rgba(201,152,42,.18)"}
+                onMouseOut={e => e.currentTarget.style.background = C.goldDim}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          <div style={{
+            padding: "10px 14px", borderTop: `1px solid ${C.border}`,
+            display: "flex", gap: 8, alignItems: "center",
+          }}>
+            <input value={msg} onChange={e => setMsg(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleSend(); }}
+              placeholder="Pergunte sobre obras..."
+              style={{
+                flex: 1, padding: "9px 12px", background: C.bg4,
+                border: `1px solid ${C.border}`, borderRadius: 8, color: C.text,
+                fontFamily: C.mono, fontSize: 11, outline: "none",
+              }}
+              onFocus={e => e.target.style.borderColor = C.goldMid}
+              onBlur={e => e.target.style.borderColor = C.border}
+            />
+            <button onClick={() => handleSend()} style={{
+              width: 34, height: 34, borderRadius: 8, background: C.grad,
+              backgroundSize: "200%", border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#030303" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* FAB button */}
+      <button onClick={() => { setOpen(o => !o); setTooltip(false); }} style={{
+        position: "fixed", bottom: 24, right: 24, zIndex: 9999,
+        width: 52, height: 52, borderRadius: 14,
+        background: open ? C.bg3 : C.grad, backgroundSize: "200%",
+        border: `1px solid ${open ? C.border2 : "transparent"}`,
+        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: open ? "none" : `0 4px 24px ${C.goldGlow}, 0 0 40px ${C.goldDim}`,
+        transition: "all .25s ease",
+      }}
+      onMouseOver={e => { e.currentTarget.style.transform = "scale(1.08)"; }}
+      onMouseOut={e => { e.currentTarget.style.transform = "scale(1)"; }}
+      >
+        {open ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.text2} strokeWidth="2" strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        ) : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#030303" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a7 7 0 0 1 7 7c0 3-1.5 5-3 6.5V18H8v-2.5C6.5 14 5 12 5 9a7 7 0 0 1 7-7z"/>
+            <path d="M9 22h6"/><path d="M10 18v2"/><path d="M14 18v2"/>
+            <circle cx="9" cy="9" r="1" fill="#030303"/><circle cx="15" cy="9" r="1" fill="#030303"/>
+            <path d="M9.5 13a3.5 3.5 0 0 0 5 0"/>
+          </svg>
+        )}
+      </button>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+      `}} />
+    </>
+  );
+}
+
 // ─── APP ROOT ─────────────────────────────────────────────────────────────────
 function App() {
   const [page, setPage]   = useState("dashboard");
@@ -2093,6 +2331,7 @@ function App() {
           {page === "config"       && <Configuracoes />}
         </main>
       </div>
+      <AiAssistant />
     </div>
   );
 }
