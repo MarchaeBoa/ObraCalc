@@ -2,7 +2,7 @@
 // Paleta idêntica à landing page: preto #040404 + ouro #C9982A→#F8DC82
 // Tipografia: Unbounded (títulos) + DM Mono (UI/dados) + Cormorant Garamond (destaques)
 
-const { useState, useMemo } = React;
+const { useState, useMemo, useEffect } = React;
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
 const C = {
@@ -324,6 +324,7 @@ const SINAPI_ETAPAS = [
 const BDI_PADRAO = { min: 20.34, normal: 24.23, max: 29.89 };
 
 function Simulador({ onSave }) {
+  const simBlocked = isLimited("simulacoes");
   const [uf, setUf] = useState("SP");
   const [padrao, setPadrao] = useState("normal");
   const [area, setArea] = useState(120);
@@ -333,6 +334,7 @@ function Simulador({ onSave }) {
   const [etapasCustom, setEtapasCustom] = useState({});
   const [expandido, setExpandido] = useState(null);
   const [modoDetalhe, setModoDetalhe] = useState(false);
+  if (simBlocked) return <Card><Paywall type="simulacoes" used={getUsage().simulacoes} /></Card>;
 
   const togglePct = (id, delta) => {
     setEtapasCustom(prev => {
@@ -629,11 +631,13 @@ function Simulador({ onSave }) {
           {/* Actions */}
           <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
             <Btn onClick={()=>{
+              if (isLimited("simulacoes")) { alert("Limite do plano gratuito atingido! Assine o plano Pro para continuar."); return; }
               const sim = { uf, padrao, area, pavimentos, bdi, encSocial, etapasCustom,
                 total: r.total, totalM2: r.totalM2, data: new Date().toISOString() };
               const sims = JSON.parse(localStorage.getItem("co_simulacoes_sinapi")||"[]");
               sims.push(sim);
               localStorage.setItem("co_simulacoes_sinapi", JSON.stringify(sims));
+              incrementUsage("simulacoes");
               onSave?.();
             }} icon="save" variant="gold">Salvar simulação SINAPI</Btn>
             <Btn onClick={()=>{
@@ -1136,20 +1140,41 @@ function CalcReboco() {
 // ─── CALCULADORAS (abas) ──────────────────────────────────────────────────────
 function Calculadoras() {
   const [tab, setTab] = useState("marmore");
+  const [calcCount, setCalcCount] = useState(() => getUsage().calculos || 0);
+  const blocked = getUserPlan() !== "pro" && calcCount >= FREE_LIMIT;
   const TABS = [
     { id: "marmore",   label: "Mármore" },
     { id: "piso",      label: "Piso" },
     { id: "alvenaria", label: "Alvenaria" },
     { id: "reboco",    label: "Reboco" },
   ];
+
+  const handleTabSwitch = (id) => {
+    if (blocked) return;
+    if (id !== tab) {
+      const newCount = incrementUsage("calculos");
+      setCalcCount(newCount);
+    }
+    setTab(id);
+  };
+
+  // Count first access
+  useEffect(() => {
+    if (getUserPlan() !== "pro" && calcCount === 0) {
+      const newCount = incrementUsage("calculos");
+      setCalcCount(newCount);
+    }
+  }, []);
+
+  if (blocked) return <Card><Paywall type="calculos" used={calcCount} /></Card>;
+
   return (
     <div>
-      {/* Tab bar — same style as landing nav */}
       <div style={{ display: "flex", gap: 2, marginBottom: 22, background: C.bg3, padding: 4, borderRadius: 9, width: "fit-content", border: `1px solid ${C.border}` }}>
         {TABS.map(t => {
           const active = tab === t.id;
           return (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)} style={{ padding: "7px 22px", borderRadius: 7, border: active ? `1px solid ${C.goldMid}` : "1px solid transparent", cursor: "pointer", fontFamily: C.mono, fontSize: 11, fontWeight: active ? 700 : 400, letterSpacing: "0.06em", transition: "all .15s", background: active ? C.grad : "transparent", backgroundSize: "200%", color: active ? C.bg : C.text2 }}>
+            <button key={t.id} type="button" onClick={() => handleTabSwitch(t.id)} style={{ padding: "7px 22px", borderRadius: 7, border: active ? `1px solid ${C.goldMid}` : "1px solid transparent", cursor: "pointer", fontFamily: C.mono, fontSize: 11, fontWeight: active ? 700 : 400, letterSpacing: "0.06em", transition: "all .15s", background: active ? C.grad : "transparent", backgroundSize: "200%", color: active ? C.bg : C.text2 }}>
               {t.label}
             </button>
           );
@@ -1299,8 +1324,9 @@ function NovoOrcamento({ onNav }) {
 
   const handleSave = () => {
     if (!f.cliente || !f.servico) return alert("Preencha cliente e serviço.");
+    if (!edit && isLimited("orcamentos")) return;
     const orc = { ...f, id: edit?.id || `#${String(orcamentos.length + 1).padStart(4, "0")}`, total: r.total, area: f.area, criadoEm: edit?.criadoEm || new Date().toISOString(), atualizadoEm: new Date().toISOString() };
-    if (edit) { save(orcamentos.map(o => o.id === edit.id ? orc : o)); } else { save([orc, ...orcamentos]); }
+    if (edit) { save(orcamentos.map(o => o.id === edit.id ? orc : o)); } else { incrementUsage("orcamentos"); save([orc, ...orcamentos]); }
     setView("list"); setEdit(null); setF({ cliente: "", servico: "", descricao: "", area: "", valorM2: "", maoObra: "", extras: 0, margem: 15, status: "rascunho" });
   };
 
@@ -1380,18 +1406,32 @@ function NovoOrcamento({ onNav }) {
     </div>
   );
 
+  const orcLimited = isLimited("orcamentos");
+  const openNewForm = () => { if (orcLimited) return; setEdit(null); setF({ cliente: "", servico: "", descricao: "", area: "", valorM2: "", maoObra: "", extras: 0, margem: 15, status: "rascunho" }); setView("form"); };
+
+  if (view === "list" && orcLimited && orcamentos.length >= FREE_LIMIT) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontFamily: C.mono, fontSize: 11, color: C.text2 }}>{orcamentos.length} orçamento{orcamentos.length !== 1 ? "s" : ""} cadastrado{orcamentos.length !== 1 ? "s" : ""}</div>
+        </div>
+        <Card><Paywall type="orcamentos" used={getUsage().orcamentos} /></Card>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontFamily: C.mono, fontSize: 11, color: C.text2 }}>{orcamentos.length} orçamento{orcamentos.length !== 1 ? "s" : ""} cadastrado{orcamentos.length !== 1 ? "s" : ""}</div>
-        <Btn onClick={() => { setEdit(null); setF({ cliente: "", servico: "", descricao: "", area: "", valorM2: "", maoObra: "", extras: 0, margem: 15, status: "rascunho" }); setView("form"); }} icon="plus" variant="gold" sm>Novo orçamento</Btn>
+        <Btn onClick={openNewForm} icon="plus" variant="gold" sm>Novo orçamento</Btn>
       </div>
       {orcamentos.length === 0 ? (
         <Card style={{ padding: "60px 20px", textAlign: "center" }}>
           <div style={{ width: 56, height: 56, borderRadius: 14, background: C.goldDim, border: `1px solid ${C.goldMid}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}><Ic d={I.quote} size={24} color={C.gold2} /></div>
           <div style={{ fontFamily: C.head, fontSize: 15, fontWeight: 900, color: C.text2 }}>Nenhum orçamento ainda</div>
           <div style={{ fontFamily: C.mono, fontSize: 11, color: C.text3, marginTop: 6, marginBottom: 18 }}>Crie seu primeiro orçamento para começar</div>
-          <Btn onClick={() => { setEdit(null); setF({ cliente: "", servico: "", descricao: "", area: "", valorM2: "", maoObra: "", extras: 0, margem: 15, status: "rascunho" }); setView("form"); }} icon="plus" variant="gold">Criar primeiro orçamento</Btn>
+          <Btn onClick={openNewForm} icon="plus" variant="gold">Criar primeiro orçamento</Btn>
         </Card>
       ) : (
         <Card style={{ padding: 0, overflow: "hidden" }}>
@@ -1864,6 +1904,74 @@ const Logo = () => (
     <line x1="18" y1="23.5" x2="18" y2="27" stroke="url(#gl)" strokeWidth="1.1" />
   </svg>
 );
+
+// ─── PLAN LIMITS (FREE = 2 uses each) ─────────────────────────────────────────
+const FREE_LIMIT = 2;
+
+function getUserPlan() {
+  try {
+    const logged = JSON.parse(localStorage.getItem("co_logged") || "null");
+    if (!logged) return "free";
+    const users = JSON.parse(localStorage.getItem("co_users") || "[]");
+    const user = users.find(u => u.email === logged.email);
+    if (!user) return "free";
+    if (user.role === "admin" || user.plan === "pro") return "pro";
+    return "free";
+  } catch { return "free"; }
+}
+
+function getUsage() {
+  try { return JSON.parse(localStorage.getItem("co_usage") || '{"orcamentos":0,"simulacoes":0,"calculos":0}'); }
+  catch { return { orcamentos: 0, simulacoes: 0, calculos: 0 }; }
+}
+
+function incrementUsage(key) {
+  const usage = getUsage();
+  usage[key] = (usage[key] || 0) + 1;
+  localStorage.setItem("co_usage", JSON.stringify(usage));
+  return usage[key];
+}
+
+function isLimited(key) {
+  if (getUserPlan() === "pro") return false;
+  return getUsage()[key] >= FREE_LIMIT;
+}
+
+const Paywall = ({ type, used }) => {
+  const labels = { orcamentos: "orçamentos", simulacoes: "simulações", calculos: "cálculos" };
+  return (
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"60px 20px", textAlign:"center" }}>
+      <div style={{ width:64, height:64, borderRadius:16, background:C.goldDim, border:`1px solid ${C.goldMid}`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:20 }}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={C.gold2} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div style={{ fontFamily:C.head, fontSize:18, fontWeight:900, color:C.text, letterSpacing:"-0.5px", marginBottom:8 }}>
+        Limite do plano gratuito atingido
+      </div>
+      <div style={{ fontFamily:C.mono, fontSize:12, color:C.text2, maxWidth:400, lineHeight:1.7, marginBottom:6 }}>
+        Você já usou <span style={{color:C.gold3, fontWeight:700}}>{used || FREE_LIMIT} de {FREE_LIMIT} {labels[type]}</span> disponíveis no plano gratuito.
+      </div>
+      <div style={{ fontFamily:C.mono, fontSize:11, color:C.text3, maxWidth:400, lineHeight:1.6, marginBottom:24 }}>
+        Faça upgrade para o plano <span style={{color:C.gold3, fontWeight:700}}>Pro</span> e tenha acesso ilimitado a todas as ferramentas.
+      </div>
+      <button onClick={() => window.location.href = 'calcobra-ultra.html#pricing'} style={{
+        padding:"14px 36px", background:C.grad, backgroundSize:"200%",
+        border:"none", borderRadius:8, color:"#030303", fontFamily:C.mono,
+        fontSize:12, fontWeight:800, letterSpacing:"0.08em", textTransform:"uppercase",
+        cursor:"pointer", boxShadow:`0 0 30px ${C.goldGlow}`, transition:"transform .15s",
+      }}
+      onMouseOver={e => e.currentTarget.style.transform = "scale(1.03)"}
+      onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}
+      >
+        Assinar plano Pro
+      </button>
+      <div style={{ fontFamily:C.mono, fontSize:10, color:C.text3, marginTop:12 }}>
+        Cancele quando quiser · Sem fidelidade
+      </div>
+    </div>
+  );
+};
 
 // ─── APP ROOT ─────────────────────────────────────────────────────────────────
 function App() {
