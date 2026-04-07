@@ -10,7 +10,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CalcObra — Entrar ou Criar Conta</title>
+<title>CalcObra — Entrar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -135,101 +135,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <button type="button" onclick="doLogin()" style="width:100%;padding:14px;background:linear-gradient(135deg,#C9982A,#EEC85A,#C9982A);background-size:200%;border:none;border-radius:8px;color:#030303;font-weight:800;font-size:13.5px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 24px rgba(201,152,42,.3)">Entrar na conta</button>
       <div style="display:flex;align-items:center;gap:12px;margin:20px 0"><div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div><span style="font-size:11px;color:#3A3530;font-family:'DM Mono',monospace">ou</span><div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div></div>
-      <p style="text-align:center;font-size:12.5px;color:#8A8070;font-family:'DM Mono',monospace">Nao tem conta? <a href="#" onclick="showView('register');return false" style="color:#C9982A;text-decoration:none;font-weight:600">Criar conta gratis &rarr;</a></p>
+      <p style="text-align:center;font-size:12.5px;color:#8A8070;font-family:'DM Mono',monospace">Nao tem conta? <a href="/checkout.html" style="color:#C9982A;text-decoration:none;font-weight:600">Assinar plano &rarr;</a></p>
     </div>
 
-    <!-- VIEW: REGISTER -->
-    <div id="v-register" style="display:none">
-      <h2 style="font-family:'Unbounded',sans-serif;font-size:20px;font-weight:900;letter-spacing:-1px;color:#F2EDE4;margin-bottom:4px">Criar conta gratis</h2>
-      <p style="font-size:12.5px;color:#8A8070;margin-bottom:24px;font-family:'DM Mono',monospace">14 dias com todas as funcionalidades</p>
-      <div id="err-reg" style="display:none;background:rgba(180,50,40,.12);border:1px solid rgba(180,50,40,.3);border-radius:8px;padding:11px 14px;margin-bottom:16px;font-size:12.5px;color:#e07060;font-family:'DM Mono',monospace"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div>
-          <label style="display:block;font-size:10.5px;color:#8A8070;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;font-family:'DM Mono',monospace">Nome</label>
-          <input id="rg-name" type="text" placeholder="Seu nome" style="width:100%;padding:12px 15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#F2EDE4;font-family:'DM Mono',monospace;font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='rgba(201,152,42,.5)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"/>
-        </div>
-        <div>
-          <label style="display:block;font-size:10.5px;color:#8A8070;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;font-family:'DM Mono',monospace">Empresa</label>
-          <input id="rg-co" type="text" placeholder="Nome da empresa" style="width:100%;padding:12px 15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#F2EDE4;font-family:'DM Mono',monospace;font-size:13px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='rgba(201,152,42,.5)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"/>
-        </div>
-      </div>
-      <div style="margin-bottom:12px">
-        <label style="display:block;font-size:10.5px;color:#8A8070;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;font-family:'DM Mono',monospace">E-mail</label>
-        <input id="rg-email" type="email" placeholder="seu@email.com" autocomplete="email" style="width:100%;padding:12px 15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#F2EDE4;font-family:'DM Mono',monospace;font-size:13.5px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='rgba(201,152,42,.5)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"/>
-      </div>
-      <div style="margin-bottom:12px">
-        <label style="display:block;font-size:10.5px;color:#8A8070;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;font-family:'DM Mono',monospace">Senha</label>
-        <div style="position:relative">
-          <input id="rg-pass" type="password" placeholder="Minimo 8 caracteres" autocomplete="new-password" oninput="checkStrength(this.value)" style="width:100%;padding:12px 44px 12px 15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#F2EDE4;font-family:'DM Mono',monospace;font-size:13.5px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='rgba(201,152,42,.5)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"/>
-          <button type="button" onclick="toggleVis('rg-pass')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#8A8070;padding:4px;display:flex;align-items:center">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <div style="margin-top:6px;height:3px;background:rgba(255,255,255,.06);border-radius:2px"><div id="str-bar" style="height:100%;width:0;border-radius:2px;transition:all .3s"></div></div>
-        <span id="str-lbl" style="font-size:10px;color:#3A3530;font-family:'DM Mono',monospace"></span>
-      </div>
-      <div style="margin-bottom:18px">
-        <label style="display:block;font-size:10.5px;color:#8A8070;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;font-family:'DM Mono',monospace">Confirmar senha</label>
-        <input id="rg-pass2" type="password" placeholder="Repita a senha" autocomplete="new-password" style="width:100%;padding:12px 15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#F2EDE4;font-family:'DM Mono',monospace;font-size:13.5px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='rgba(201,152,42,.5)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"/>
-      </div>
-      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:20px">
-        <input id="rg-terms" type="checkbox" style="margin-top:2px;accent-color:#C9982A;width:15px;height:15px;flex-shrink:0"/>
-        <span style="font-size:11.5px;color:#8A8070;font-family:'DM Mono',monospace;line-height:1.5">Concordo com os <a href="#" style="color:#C9982A">Termos de Uso</a> e <a href="#" style="color:#C9982A">Politica de Privacidade</a></span>
-      </label>
-      <button type="button" onclick="doRegister()" style="width:100%;padding:14px;background:linear-gradient(135deg,#C9982A,#EEC85A,#C9982A);background-size:200%;border:none;border-radius:8px;color:#030303;font-weight:800;font-size:13.5px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 24px rgba(201,152,42,.3)">Criar conta</button>
-      <p style="text-align:center;font-size:12.5px;color:#8A8070;font-family:'DM Mono',monospace;margin-top:18px">Ja tem conta? <a href="#" onclick="showView('login');return false" style="color:#C9982A;text-decoration:none;font-weight:600">Entrar &rarr;</a></p>
-    </div>
-
-    <!-- VIEW: SENDING -->
-    <div id="v-sending" style="display:none;text-align:center;padding:24px 0">
-      <div style="width:76px;height:76px;border-radius:20px;background:rgba(201,152,42,.1);border:1px solid rgba(201,152,42,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:pulseG 2s ease infinite">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#C9982A" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-      </div>
-      <h3 style="font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;letter-spacing:-1px;color:#F2EDE4;margin-bottom:8px">Gerando codigo seguro...</h3>
-      <p style="font-size:12.5px;color:#8A8070;font-family:'DM Mono',monospace;line-height:1.6">Enviando para<br><span id="send-email" style="color:#C9982A;font-weight:600"></span></p>
-      <div style="display:flex;justify-content:center;gap:6px;margin-top:20px">
-        <div style="width:7px;height:7px;border-radius:50%;background:#C9982A;animation:bounce 0.8s 0s infinite"></div>
-        <div style="width:7px;height:7px;border-radius:50%;background:#C9982A;animation:bounce 0.8s .15s infinite"></div>
-        <div style="width:7px;height:7px;border-radius:50%;background:#C9982A;animation:bounce 0.8s .3s infinite"></div>
-      </div>
-    </div>
-
-    <!-- VIEW: CODE -->
-    <div id="v-code" style="display:none">
-      <div style="text-align:center;margin-bottom:24px">
-        <div style="width:68px;height:68px;border-radius:18px;background:rgba(201,152,42,.1);border:1px solid rgba(201,152,42,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C9982A" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/></svg>
-        </div>
-        <h2 style="font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;letter-spacing:-1px;color:#F2EDE4;margin-bottom:6px">Verifique seu e-mail</h2>
-        <p style="font-size:12.5px;color:#8A8070;font-family:'DM Mono',monospace;line-height:1.6">Codigo enviado para<br><span id="code-mail" style="color:#C9982A;font-weight:600"></span></p>
-      </div>
-      <div id="err-code" style="display:none;background:rgba(180,50,40,.12);border:1px solid rgba(180,50,40,.3);border-radius:8px;padding:11px 14px;margin-bottom:16px;font-size:12.5px;color:#e07060;font-family:'DM Mono',monospace;text-align:center"></div>
-      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:24px" id="digit-row">
-        <input class="dg" maxlength="1" type="text" inputmode="numeric" style="width:48px;height:58px;text-align:center;font-family:'Unbounded',sans-serif;font-size:22px;font-weight:700;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#F2EDE4;outline:none;box-sizing:border-box"/>
-        <input class="dg" maxlength="1" type="text" inputmode="numeric" style="width:48px;height:58px;text-align:center;font-family:'Unbounded',sans-serif;font-size:22px;font-weight:700;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#F2EDE4;outline:none;box-sizing:border-box"/>
-        <input class="dg" maxlength="1" type="text" inputmode="numeric" style="width:48px;height:58px;text-align:center;font-family:'Unbounded',sans-serif;font-size:22px;font-weight:700;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#F2EDE4;outline:none;box-sizing:border-box"/>
-        <span style="display:flex;align-items:center;color:#3A3530;font-size:18px;font-family:'DM Mono',monospace">&ndash;</span>
-        <input class="dg" maxlength="1" type="text" inputmode="numeric" style="width:48px;height:58px;text-align:center;font-family:'Unbounded',sans-serif;font-size:22px;font-weight:700;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#F2EDE4;outline:none;box-sizing:border-box"/>
-        <input class="dg" maxlength="1" type="text" inputmode="numeric" style="width:48px;height:58px;text-align:center;font-family:'Unbounded',sans-serif;font-size:22px;font-weight:700;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#F2EDE4;outline:none;box-sizing:border-box"/>
-        <input class="dg" maxlength="1" type="text" inputmode="numeric" style="width:48px;height:58px;text-align:center;font-family:'Unbounded',sans-serif;font-size:22px;font-weight:700;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#F2EDE4;outline:none;box-sizing:border-box"/>
-      </div>
-      <button type="button" id="btn-verify" onclick="doVerify()" style="width:100%;padding:14px;background:linear-gradient(135deg,#C9982A,#EEC85A,#C9982A);background-size:200%;border:none;border-radius:8px;color:#030303;font-weight:800;font-size:13.5px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 24px rgba(201,152,42,.3)">Confirmar codigo</button>
-      <div style="text-align:center;margin-top:16px">
-        <span id="resend-txt" style="font-size:11.5px;color:#3A3530;font-family:'DM Mono',monospace"></span>
-        <a href="#" id="resend-lnk" onclick="doResend();return false" style="display:none;font-size:11.5px;color:#C9982A;font-family:'DM Mono',monospace;text-decoration:none;font-weight:600">Reenviar codigo &rarr;</a>
-      </div>
-    </div>
-
-    <!-- VIEW: SUCCESS -->
-    <div id="v-success" style="display:none;text-align:center;padding:24px 0">
-      <div style="width:76px;height:76px;border-radius:50%;background:rgba(58,170,100,.12);border:1px solid rgba(58,170,100,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3aaa6a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <h2 style="font-family:'Unbounded',sans-serif;font-size:20px;font-weight:900;letter-spacing:-1px;color:#F2EDE4;margin-bottom:8px">Conta confirmada!</h2>
-      <p style="font-size:13px;color:#8A8070;font-family:'DM Mono',monospace;line-height:1.6;margin-bottom:6px">Bem-vindo ao CalcObra, <span id="ok-name" style="color:#C9982A;font-weight:600"></span></p>
-      <p style="font-size:11.5px;color:#3A3530;font-family:'DM Mono',monospace;margin-bottom:28px">E-mail verificado com sucesso.</p>
-      <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px"><div id="ok-bar" style="height:100%;width:0;background:linear-gradient(90deg,#C9982A,#F8DC82);border-radius:2px;transition:width 3s linear"></div></div>
-    </div>
 
   </div>
 </div>
@@ -249,34 +157,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 })();
 
-/* ── STATE ── */
-var S = { email:'', name:'', company:'', pass:'', code:'', timer:null, secs:60, codeAt:0 };
-var VIEWS = ['login','register','sending','code','success'];
-
-var APPS_SCRIPT_URL = '';
-
-/* ── URL PARAM: ?modo=register ── */
+/* ── URL PARAM: ?modo=register → redirect to checkout ── */
 (function checkMode() {
   var params = new URLSearchParams(window.location.search);
   var modo = params.get('modo');
   if (modo === 'register' || modo === 'registro') {
-    showView('register');
+    window.location.href = '/checkout.html';
+    return;
   }
 })();
-
-/* ── VIEWS ── */
-window.showView = function(name) {
-  VIEWS.forEach(function(v) {
-    var el = document.getElementById('v-' + v);
-    if (el) el.style.display = (v === name) ? '' : 'none';
-  });
-  /* Update URL without reload */
-  if (name === 'register') {
-    history.replaceState(null, '', '/cadastro?modo=register');
-  } else if (name === 'login') {
-    history.replaceState(null, '', '/cadastro');
-  }
-};
 
 /* ── HELPERS ── */
 window.toggleVis = function(id) {
@@ -308,25 +197,6 @@ function setBusy(id, busy) {
   }
 }
 
-/* ── PASSWORD STRENGTH ── */
-window.checkStrength = function(v) {
-  var bar = document.getElementById('str-bar');
-  var lbl = document.getElementById('str-lbl');
-  if (!v) { bar.style.width='0'; lbl.textContent=''; return; }
-  var s = 0;
-  if (v.length >= 8) s++;
-  if (/[A-Z]/.test(v)) s++;
-  if (/[0-9]/.test(v)) s++;
-  if (/[^A-Za-z0-9]/.test(v)) s++;
-  var lvl = [
-    {w:'20%',c:'#c04030',t:'Muito fraca'},
-    {w:'45%',c:'#c07530',t:'Fraca'},
-    {w:'72%',c:'#a89020',t:'Media'},
-    {w:'100%',c:'#3aaa6a',t:'Forte'}
-  ][s-1] || {w:'8%',c:'#c04030',t:''};
-  bar.style.width=lvl.w; bar.style.background=lvl.c;
-  lbl.textContent=lvl.t; lbl.style.color=lvl.c;
-};
 
 /* ── TOAST ── */
 window.toastMsg = function(msg, type) {
@@ -381,182 +251,6 @@ window.doLogin = function() {
   setTimeout(function(){ window.location.href = '/dashboard.html'; }, 400);
 };
 
-/* ── REGISTER ── */
-window.doRegister = function() {
-  hideErr('err-reg');
-  var name  = document.getElementById('rg-name').value.trim();
-  var co    = document.getElementById('rg-co').value.trim();
-  var email = document.getElementById('rg-email').value.trim();
-  var pass  = document.getElementById('rg-pass').value;
-  var pass2 = document.getElementById('rg-pass2').value;
-  var terms = document.getElementById('rg-terms').checked;
-
-  if (!name)  return showErr('err-reg','Informe seu nome.');
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    return showErr('err-reg','E-mail invalido.');
-  if (pass.length < 8) return showErr('err-reg','Senha deve ter pelo menos 8 caracteres.');
-  if (pass !== pass2)  return showErr('err-reg','As senhas nao coincidem.');
-  if (!terms)          return showErr('err-reg','Aceite os termos para continuar.');
-
-  var users = JSON.parse(localStorage.getItem('co_users') || '[]');
-  if (users.some(function(u){ return u.email === email; }))
-    return showErr('err-reg','E-mail ja cadastrado. Faca login.');
-
-  var encPass = btoa(unescape(encodeURIComponent(pass)));
-
-  users.push({ name:name, company:co, email:email, pass:encPass, ok:true, plan:'free', at:new Date().toISOString() });
-  localStorage.setItem('co_users', JSON.stringify(users));
-
-  localStorage.setItem('co_logged', JSON.stringify({ name:name, email:email, company:co }));
-  localStorage.removeItem('co_pending');
-
-  toastMsg('Conta criada! Bem-vindo, ' + name + '!', 'success');
-  setTimeout(function(){ window.location.href = '/dashboard.html'; }, 800);
-};
-
-/* ── GENERATE & SEND CODE ── */
-function sendCodeEmail(email, name, code) {
-  if (!APPS_SCRIPT_URL) return false;
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ email: email, name: name, code: code }),
-    mode: 'no-cors'
-  });
-  return true;
-}
-
-function genCode(email, name) {
-  S.code = String(Math.floor(100000 + Math.random() * 900000));
-  var sent = sendCodeEmail(email, name, S.code);
-  setTimeout(function() {
-    document.getElementById('code-mail').textContent = S.email;
-    showView('code');
-    initDigits();
-    startResend();
-    if (sent) {
-      toastMsg('Codigo enviado para ' + S.email, 'info');
-    } else {
-      toastMsg('Modo demo - Codigo: ' + S.code, 'warning');
-    }
-  }, 1800);
-}
-
-/* ── DIGIT INPUTS ── */
-function initDigits() {
-  var dgs = document.querySelectorAll('.dg');
-  dgs.forEach(function(el, i) {
-    el.value = '';
-    el.className = el.className.replace(/\b(ok|bad)\b/g,'').trim() + ' dg';
-    el.oninput = function(e) {
-      var v = e.target.value.replace(/\D/g,'');
-      e.target.value = v;
-      if (v) {
-        e.target.classList.add('ok');
-        if (i < dgs.length-1) dgs[i+1].focus();
-        var all = '';
-        dgs.forEach(function(d){ all += d.value; });
-        if (all.length === 6) setTimeout(doVerify, 180);
-      } else {
-        e.target.classList.remove('ok');
-      }
-    };
-    el.onkeydown = function(e) {
-      if (e.key === 'Backspace' && !e.target.value && i > 0) {
-        dgs[i-1].value = '';
-        dgs[i-1].classList.remove('ok');
-        dgs[i-1].focus();
-      }
-    };
-    el.onpaste = function(e) {
-      var pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
-      if (pasted.length === 6) {
-        e.preventDefault();
-        dgs.forEach(function(d,j){ d.value=pasted[j]||''; if(d.value) d.classList.add('ok'); });
-        setTimeout(doVerify, 180);
-      }
-    };
-  });
-  setTimeout(function(){ dgs[0] && dgs[0].focus(); }, 80);
-}
-
-/* ── VERIFY CODE ── */
-window.doVerify = function() {
-  hideErr('err-code');
-  var dgs = document.querySelectorAll('.dg');
-  var entered = '';
-  dgs.forEach(function(d){ entered += d.value; });
-  if (entered.length < 6) return showErr('err-code','Digite todos os 6 digitos.');
-  setBusy('btn-verify', true);
-  setTimeout(function() {
-    if (entered === S.code) {
-      if (Date.now() - S.codeAt > 10 * 60 * 1000) {
-        setBusy('btn-verify', false);
-        return showErr('err-code', 'Codigo expirado. Clique em "Reenviar codigo".');
-      }
-      var users = JSON.parse(localStorage.getItem('co_users') || '[]');
-      users.push({ name:S.name, company:S.company, email:S.email, pass:S.pass, ok:true, plan:'free', at:new Date().toISOString() });
-      localStorage.setItem('co_users', JSON.stringify(users));
-      localStorage.setItem('co_logged', JSON.stringify({ name:S.name, email:S.email, company:S.company }));
-      localStorage.removeItem('co_pending');
-      document.getElementById('ok-name').textContent = S.name;
-      showView('success');
-      setTimeout(function(){ document.getElementById('ok-bar').style.width='100%'; }, 80);
-      toastMsg('E-mail verificado! Bem-vindo, ' + S.name + '!', 'success');
-      setTimeout(function(){ window.location.href = '/dashboard.html'; }, 3400);
-    } else {
-      setBusy('btn-verify', false);
-      dgs.forEach(function(d){
-        d.classList.remove('ok');
-        d.classList.add('bad');
-        setTimeout(function(){ d.classList.remove('bad'); d.value=''; }, 700);
-      });
-      showErr('err-code','Codigo incorreto. Tente novamente.');
-      setTimeout(function(){ dgs[0] && dgs[0].focus(); }, 720);
-    }
-  }, 700);
-};
-
-/* ── RESEND TIMER ── */
-function startResend() {
-  S.secs = 60;
-  clearInterval(S.timer);
-  var txt = document.getElementById('resend-txt');
-  var lnk = document.getElementById('resend-lnk');
-  if (lnk) lnk.style.display = 'none';
-  S.timer = setInterval(function() {
-    S.secs--;
-    if (txt) txt.textContent = 'Reenviar em ' + S.secs + 's';
-    if (S.secs <= 0) {
-      clearInterval(S.timer);
-      if (txt) txt.style.display = 'none';
-      if (lnk) lnk.style.display = '';
-    }
-  }, 1000);
-}
-
-window.doResend = function() {
-  var lnk = document.getElementById('resend-lnk');
-  if (lnk) lnk.style.display = 'none';
-  document.getElementById('resend-txt').style.display = '';
-  S.code   = String(Math.floor(100000 + Math.random() * 900000));
-  S.codeAt = Date.now();
-  var sent = sendCodeEmail(S.email, S.name, S.code);
-  initDigits();
-  startResend();
-  if (!sent) {
-    toastMsg('Modo demo - Novo codigo: ' + S.code, 'warning');
-  }
-};
-
-/* ── AUTO-CHECK URL MODE ON LOAD ── */
-document.addEventListener('DOMContentLoaded', function() {
-  var params = new URLSearchParams(window.location.search);
-  var modo = params.get('modo');
-  if (modo === 'register' || modo === 'registro') {
-    showView('register');
-  }
-});
 
 })();
 </script>

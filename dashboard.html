@@ -26,10 +26,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div id="root"></div>
 <script>
 (function() {
-  // Auth guard
+  // Auth guard - require login
   var logged = null;
   try { logged = JSON.parse(localStorage.getItem('co_logged')); } catch(e){}
   if (!logged) { window.location.href = 'calcobra-ultra.html'; return; }
+
+  // Payment guard - require active paid plan
+  var users = JSON.parse(localStorage.getItem('co_users') || '[]');
+  var currentUser = null;
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].email === logged.email) { currentUser = users[i]; break; }
+  }
+  if (!currentUser || (currentUser.plan !== 'pro' && currentUser.plan !== 'enterprise' && currentUser.role !== 'admin')) {
+    window.location.href = '/checkout.html';
+    return;
+  }
 
   // Load JSX via fetch then transform with Babel
   fetch('calcobra_dashboard.jsx')
