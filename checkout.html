@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-TN72Q5WD');</script>
+<!-- End Google Tag Manager -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CalcObra — Assinar Plano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#040404;--gold:#C9982A;--gold2:#DDB040;--gold3:#EEC85A;--gold4:#F8DC82;
+  --text:#F2EDE4;--text2:#8A8070;--text3:#3A3530;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  font-family:'DM Mono',monospace;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow-x:hidden;
+}
+
+.bg-stars{
+  position:fixed;inset:0;z-index:0;
+  background:url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=1920&q=80') center/cover no-repeat;
+}
+.bg-overlay{
+  position:fixed;inset:0;z-index:1;
+  background:rgba(0,0,0,.6);
+}
+
+.checkout-wrap{
+  position:relative;z-index:2;
+  width:100%;max-width:520px;margin:20px;
+  background:#0d0d0d;
+  border:1px solid rgba(201,152,42,.22);
+  border-radius:20px;
+  box-shadow:0 40px 100px rgba(0,0,0,.85),0 0 60px rgba(201,152,42,.1);
+  overflow:hidden;
+  animation:modalIn .45s cubic-bezier(.16,1,.3,1) both;
+}
+.auth-gold-line{height:2px;background:linear-gradient(90deg,transparent,#C9982A 20%,#F8DC82 50%,#C9982A 80%,transparent)}
+.checkout-body{padding:36px 40px 40px}
+
+@keyframes modalIn{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes pulseG{0%,100%{box-shadow:0 0 0 0 rgba(201,152,42,.3)}50%{box-shadow:0 0 0 14px rgba(201,152,42,0)}}
+@keyframes spinA{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+.input-field{
+  width:100%;padding:12px 15px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;color:#F2EDE4;
+  font-family:'DM Mono',monospace;font-size:13.5px;
+  outline:none;box-sizing:border-box;
+  transition:border-color .2s;
+}
+.input-field:focus{border-color:rgba(201,152,42,.5)!important;background:rgba(201,152,42,.06)!important}
+.input-label{display:block;font-size:10.5px;color:#8A8070;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;font-family:'DM Mono',monospace}
+
+/* Plan selector */
+.plan-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.plan-card{
+  padding:16px 14px;
+  background:rgba(255,255,255,.03);
+  border:1.5px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  cursor:pointer;
+  transition:all .2s;
+  text-align:center;
+  position:relative;
+}
+.plan-card:hover{border-color:rgba(201,152,42,.3);background:rgba(201,152,42,.04)}
+.plan-card.selected{border-color:rgba(201,152,42,.6);background:rgba(201,152,42,.08);box-shadow:0 0 20px rgba(201,152,42,.15)}
+.plan-card .plan-name{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:#F2EDE4;margin-bottom:4px}
+.plan-card .plan-price{font-size:20px;font-weight:900;font-family:'Unbounded',sans-serif;background:linear-gradient(135deg,#C9982A,#EEC85A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.plan-card .plan-cycle{font-size:10px;color:#8A8070;margin-top:2px}
+.plan-badge{
+  position:absolute;top:-8px;right:-8px;
+  background:linear-gradient(135deg,#C9982A,#EEC85A);
+  color:#030303;font-size:8px;font-weight:800;
+  padding:3px 8px;border-radius:10px;
+  font-family:'DM Mono',monospace;letter-spacing:.5px;text-transform:uppercase;
+}
+
+/* Steps indicator */
+.steps{display:flex;align-items:center;gap:8px;margin-bottom:24px}
+.step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.1);transition:all .3s}
+.step-dot.active{background:#C9982A;box-shadow:0 0 8px rgba(201,152,42,.4)}
+.step-dot.done{background:#3aaa6a}
+.step-line{flex:1;height:1px;background:rgba(255,255,255,.06)}
+
+/* Payment form */
+.card-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Security badge */
+.security-badge{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;
+  background:rgba(58,170,100,.06);
+  border:1px solid rgba(58,170,100,.15);
+  border-radius:8px;
+  margin-top:16px;
+}
+
+.back-link{
+  position:fixed;top:24px;left:28px;z-index:10;
+  display:flex;align-items:center;gap:8px;
+  font-family:'DM Mono',monospace;font-size:13px;
+  color:#8A8070;text-decoration:none;
+  transition:color .2s;
+}
+.back-link:hover{color:#F2EDE4}
+.back-link svg{transition:transform .2s}
+.back-link:hover svg{transform:translateX(-3px)}
+
+.login-link{
+  position:fixed;top:24px;right:28px;z-index:10;
+  display:flex;align-items:center;gap:8px;
+  font-family:'DM Mono',monospace;font-size:13px;
+  color:#C9982A;text-decoration:none;
+  transition:color .2s;
+}
+.login-link:hover{color:#EEC85A}
+
+@media(max-width:520px){
+  .checkout-body{padding:28px 22px 30px}
+  .back-link{top:16px;left:16px}
+  .login-link{top:16px;right:16px}
+  .plan-cards{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TN72Q5WD"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div class="bg-stars"></div>
+<div class="bg-overlay"></div>
+
+<a href="/" class="back-link">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+  Voltar ao site
+</a>
+
+<a href="/cadastro" class="login-link">
+  Ja tem conta? Entrar
+</a>
+
+<!-- CHECKOUT CARD -->
+<div class="checkout-wrap">
+  <div class="auth-gold-line"></div>
+  <div class="checkout-body">
+
+    <!-- LOGO -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px">
+      <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+        <svg viewBox="0 0 38 38" fill="none" width="30" height="30"><defs><linearGradient id="ml" x1="0" y1="0" x2="38" y2="38" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#C9982A"/><stop offset="50%" stop-color="#EEC85A"/><stop offset="100%" stop-color="#C9982A"/></linearGradient></defs><polygon points="19,3 33,11 33,27 19,35 5,27 5,11" stroke="url(#ml)" stroke-width="1.2" fill="rgba(201,152,42,0.06)"/><circle cx="19" cy="19" r="3.5" fill="url(#ml)"/></svg>
+        <span style="font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;color:#F2EDE4;letter-spacing:-.5px">Calc<span style="background:linear-gradient(135deg,#C9982A,#EEC85A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Obra</span></span>
+      </a>
+    </div>
+
+    <!-- STEP 1: PLAN SELECTION -->
+    <div id="step-plan">
+      <h2 style="font-family:'Unbounded',sans-serif;font-size:20px;font-weight:900;letter-spacing:-1px;color:#F2EDE4;margin-bottom:4px">Escolha seu plano</h2>
+      <p style="font-size:12.5px;color:#8A8070;margin-bottom:20px;font-family:'DM Mono',monospace">Acesso completo apos o pagamento</p>
+
+      <div class="plan-cards">
+        <div class="plan-card selected" onclick="selectPlan('pro')" id="card-pro">
+          <div class="plan-badge">Popular</div>
+          <div class="plan-name">Profissional</div>
+          <div class="plan-price">R$ 79</div>
+          <div class="plan-cycle">/mes</div>
+        </div>
+        <div class="plan-card" onclick="selectPlan('enterprise')" id="card-enterprise">
+          <div class="plan-name">Empresa</div>
+          <div class="plan-price">R$ 197</div>
+          <div class="plan-cycle">/mes</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(201,152,42,.06);border:1px solid rgba(201,152,42,.12);border-radius:10px;padding:14px 16px;margin-bottom:20px">
+        <div id="plan-features" style="font-size:11.5px;color:#8A8070;font-family:'DM Mono',monospace;line-height:1.8">
+          <div style="color:#EEC85A;font-weight:600;margin-bottom:6px;font-size:12px">Plano Profissional inclui:</div>
+          <div>&#10003; Orcamentos ilimitados</div>
+          <div>&#10003; Todas as calculadoras</div>
+          <div>&#10003; PDF premium com logo + CNPJ</div>
+          <div>&#10003; Banco de precos SINAPI</div>
+          <div>&#10003; CRM de clientes ilimitado</div>
+          <div>&#10003; Simulador completo de obras</div>
+        </div>
+      </div>
+
+      <button type="button" onclick="goToStep2()" style="width:100%;padding:14px;background:linear-gradient(135deg,#C9982A,#EEC85A,#C9982A);background-size:200%;border:none;border-radius:8px;color:#030303;font-weight:800;font-size:13.5px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 24px rgba(201,152,42,.3)">Continuar para pagamento</button>
+    </div>
+
+    <!-- STEP 2: ACCOUNT + PAYMENT -->
+    <div id="step-payment" style="display:none">
+      <!-- Steps indicator -->
+      <div class="steps">
+        <div class="step-dot done"></div>
+        <div class="step-line"></div>
+        <div class="step-dot active"></div>
+      </div>
+
+      <h2 style="font-family:'Unbounded',sans-serif;font-size:20px;font-weight:900;letter-spacing:-1px;color:#F2EDE4;margin-bottom:4px">Dados e pagamento</h2>
+      <p style="font-size:12.5px;color:#8A8070;margin-bottom:20px;font-family:'DM Mono',monospace">Sua conta sera criada automaticamente</p>
+
+      <div id="err-checkout" style="display:none;background:rgba(180,50,40,.12);border:1px solid rgba(180,50,40,.3);border-radius:8px;padding:11px 14px;margin-bottom:16px;font-size:12.5px;color:#e07060;font-family:'DM Mono',monospace"></div>
+
+      <!-- Account info -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:10px;color:#C9982A;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Dados da conta</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label class="input-label">Nome</label>
+            <input id="ck-name" type="text" placeholder="Seu nome" class="input-field"/>
+          </div>
+          <div>
+            <label class="input-label">Empresa</label>
+            <input id="ck-company" type="text" placeholder="Sua empresa" class="input-field"/>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label class="input-label">E-mail</label>
+          <input id="ck-email" type="email" placeholder="seu@email.com" autocomplete="email" class="input-field"/>
+        </div>
+        <div style="margin-bottom:10px">
+          <label class="input-label">Senha</label>
+          <div style="position:relative">
+            <input id="ck-pass" type="password" placeholder="Minimo 8 caracteres" autocomplete="new-password" class="input-field" style="padding-right:44px"/>
+            <button type="button" onclick="toggleVis('ck-pass')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#8A8070;padding:4px;display:flex;align-items:center">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment info -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:10px;color:#C9982A;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;font-weight:600">Dados do pagamento</div>
+        <div style="margin-bottom:10px">
+          <label class="input-label">Numero do cartao</label>
+          <input id="ck-card" type="text" placeholder="0000 0000 0000 0000" maxlength="19" class="input-field" oninput="formatCard(this)"/>
+        </div>
+        <div class="card-row" style="margin-bottom:10px">
+          <div>
+            <label class="input-label">Validade</label>
+            <input id="ck-exp" type="text" placeholder="MM/AA" maxlength="5" class="input-field" oninput="formatExp(this)"/>
+          </div>
+          <div>
+            <label class="input-label">CVV</label>
+            <input id="ck-cvv" type="text" placeholder="123" maxlength="4" class="input-field" oninput="this.value=this.value.replace(/\D/g,'')"/>
+          </div>
+        </div>
+        <div>
+          <label class="input-label">Nome no cartao</label>
+          <input id="ck-cardholder" type="text" placeholder="Como esta no cartao" class="input-field" style="text-transform:uppercase"/>
+        </div>
+      </div>
+
+      <!-- Terms -->
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:18px">
+        <input id="ck-terms" type="checkbox" style="margin-top:2px;accent-color:#C9982A;width:15px;height:15px;flex-shrink:0"/>
+        <span style="font-size:11.5px;color:#8A8070;font-family:'DM Mono',monospace;line-height:1.5">Concordo com os <a href="#" style="color:#C9982A">Termos de Uso</a> e <a href="#" style="color:#C9982A">Politica de Privacidade</a></span>
+      </label>
+
+      <!-- Order summary -->
+      <div style="background:rgba(201,152,42,.06);border:1px solid rgba(201,152,42,.12);border-radius:10px;padding:14px 16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:11px;color:#8A8070;font-family:'DM Mono',monospace">Plano selecionado</div>
+          <div id="summary-plan" style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:#F2EDE4;margin-top:2px">Profissional</div>
+        </div>
+        <div style="text-align:right">
+          <div id="summary-price" style="font-family:'Unbounded',sans-serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,#C9982A,#EEC85A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">R$ 79</div>
+          <div style="font-size:10px;color:#8A8070;font-family:'DM Mono',monospace">/mes</div>
+        </div>
+      </div>
+
+      <button type="button" id="btn-pay" onclick="doCheckout()" style="width:100%;padding:16px;background:linear-gradient(135deg,#C9982A,#EEC85A,#C9982A);background-size:200%;border:none;border-radius:8px;color:#030303;font-weight:800;font-size:14px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 30px rgba(201,152,42,.35)">Finalizar pagamento</button>
+
+      <div class="security-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3aaa6a" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span style="font-size:10.5px;color:#3aaa6a;font-family:'DM Mono',monospace">Pagamento 100% seguro e criptografado</span>
+      </div>
+
+      <div style="text-align:center;margin-top:14px">
+        <a href="#" onclick="backToStep1();return false" style="font-size:11.5px;color:#8A8070;font-family:'DM Mono',monospace;text-decoration:none">&#8592; Voltar e trocar plano</a>
+      </div>
+    </div>
+
+    <!-- STEP 3: SUCCESS -->
+    <div id="step-success" style="display:none;text-align:center;padding:24px 0">
+      <div style="width:76px;height:76px;border-radius:50%;background:rgba(58,170,100,.12);border:1px solid rgba(58,170,100,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3aaa6a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2 style="font-family:'Unbounded',sans-serif;font-size:20px;font-weight:900;letter-spacing:-1px;color:#F2EDE4;margin-bottom:8px">Pagamento aprovado!</h2>
+      <p style="font-size:13px;color:#8A8070;font-family:'DM Mono',monospace;line-height:1.6;margin-bottom:6px">Bem-vindo ao CalcObra, <span id="ok-name" style="color:#C9982A;font-weight:600"></span></p>
+      <p style="font-size:11.5px;color:#3A3530;font-family:'DM Mono',monospace;margin-bottom:28px">Sua conta foi criada e o acesso total foi liberado.</p>
+      <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px"><div id="ok-bar" style="height:100%;width:0;background:linear-gradient(90deg,#3aaa6a,#5ddb8d);border-radius:2px;transition:width 3s linear"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+"use strict";
+
+/* ── ADMIN SEED ── */
+(function seedAdmin() {
+  var ADM_EMAIL = 'oescolhidoneo9@gmail.com';
+  var ADM_PASS  = btoa(unescape(encodeURIComponent('Lojas1515#')));
+  var users = JSON.parse(localStorage.getItem('co_users') || '[]');
+  if (!users.some(function(u){ return u.email === ADM_EMAIL; })) {
+    users.push({ name:'Admin', company:'Yoha Digital', email:ADM_EMAIL, pass:ADM_PASS, ok:true, plan:'pro', role:'admin', at:new Date().toISOString() });
+    localStorage.setItem('co_users', JSON.stringify(users));
+  }
+})();
+
+/* ── STATE ── */
+var selectedPlan = 'pro';
+
+/* ── PLAN SELECTION ── */
+window.selectPlan = function(plan) {
+  selectedPlan = plan;
+  document.getElementById('card-pro').classList.toggle('selected', plan === 'pro');
+  document.getElementById('card-enterprise').classList.toggle('selected', plan === 'enterprise');
+
+  var features = document.getElementById('plan-features');
+  var summaryPlan = document.getElementById('summary-plan');
+  var summaryPrice = document.getElementById('summary-price');
+
+  if (plan === 'pro') {
+    summaryPlan.textContent = 'Profissional';
+    summaryPrice.textContent = 'R$ 79';
+    features.innerHTML = '<div style="color:#EEC85A;font-weight:600;margin-bottom:6px;font-size:12px">Plano Profissional inclui:</div>' +
+      '<div>&#10003; Orcamentos ilimitados</div>' +
+      '<div>&#10003; Todas as calculadoras</div>' +
+      '<div>&#10003; PDF premium com logo + CNPJ</div>' +
+      '<div>&#10003; Banco de precos SINAPI</div>' +
+      '<div>&#10003; CRM de clientes ilimitado</div>' +
+      '<div>&#10003; Simulador completo de obras</div>';
+  } else {
+    summaryPlan.textContent = 'Empresa';
+    summaryPrice.textContent = 'R$ 197';
+    features.innerHTML = '<div style="color:#EEC85A;font-weight:600;margin-bottom:6px;font-size:12px">Plano Empresa inclui:</div>' +
+      '<div>&#10003; Tudo do plano Profissional</div>' +
+      '<div>&#10003; Relatorios avancados</div>' +
+      '<div>&#10003; Multiplos usuarios</div>' +
+      '<div>&#10003; Suporte dedicado</div>' +
+      '<div>&#10003; Gestao de equipe</div>';
+  }
+};
+
+/* ── STEPS NAVIGATION ── */
+window.goToStep2 = function() {
+  document.getElementById('step-plan').style.display = 'none';
+  document.getElementById('step-payment').style.display = '';
+};
+
+window.backToStep1 = function() {
+  document.getElementById('step-payment').style.display = 'none';
+  document.getElementById('step-plan').style.display = '';
+};
+
+/* ── HELPERS ── */
+window.toggleVis = function(id) {
+  var el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+};
+
+window.formatCard = function(el) {
+  var v = el.value.replace(/\D/g, '').substring(0, 16);
+  el.value = v.replace(/(\d{4})(?=\d)/g, '$1 ');
+};
+
+window.formatExp = function(el) {
+  var v = el.value.replace(/\D/g, '').substring(0, 4);
+  if (v.length >= 3) v = v.substring(0, 2) + '/' + v.substring(2);
+  el.value = v;
+};
+
+function showErr(msg) {
+  var el = document.getElementById('err-checkout');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideErr() {
+  var el = document.getElementById('err-checkout');
+  if (el) el.style.display = 'none';
+}
+
+function setBusy(busy) {
+  var btn = document.getElementById('btn-pay');
+  if (!btn) return;
+  btn.disabled = busy;
+  btn.style.opacity = busy ? '0.65' : '1';
+  if (busy) {
+    btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spinA .7s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>Processando pagamento...</span>';
+  } else {
+    btn.textContent = 'Finalizar pagamento';
+  }
+}
+
+/* ── TOAST ── */
+function toastMsg(msg, type) {
+  var old = document.getElementById('co-toast');
+  if (old) old.remove();
+  var pal = { success:{bg:'rgba(15,40,25,.97)',bd:'rgba(58,170,100,.3)',tx:'#3aaa6a'},
+               info:{bg:'rgba(12,12,12,.97)',bd:'rgba(201,152,42,.3)',tx:'#EEC85A'},
+               warning:{bg:'rgba(30,25,8,.97)',bd:'rgba(230,160,32,.4)',tx:'#f0c040'},
+               error:{bg:'rgba(35,10,10,.97)',bd:'rgba(180,50,40,.3)',tx:'#e07060'} };
+  var c = pal[type] || pal.info;
+  var t = document.createElement('div');
+  t.id = 'co-toast';
+  t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);z-index:999999;background:' + c.bg + ';border:1px solid ' + c.bd + ';border-radius:12px;padding:13px 22px;font-family:DM Mono,monospace;font-size:13px;font-weight:500;color:' + c.tx + ';white-space:nowrap;box-shadow:0 16px 48px rgba(0,0,0,.55);opacity:0;transition:all .32s cubic-bezier(.16,1,.3,1);backdrop-filter:blur(16px)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(function() {
+    t.style.opacity = '1';
+    t.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  setTimeout(function() {
+    t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(12px)';
+    setTimeout(function(){ t.remove(); }, 320);
+  }, 3600);
+}
+
+/* ── CHECKOUT (payment + account creation) ── */
+window.doCheckout = function() {
+  hideErr();
+
+  var name  = document.getElementById('ck-name').value.trim();
+  var co    = document.getElementById('ck-company').value.trim();
+  var email = document.getElementById('ck-email').value.trim();
+  var pass  = document.getElementById('ck-pass').value;
+  var card  = document.getElementById('ck-card').value.replace(/\s/g, '');
+  var exp   = document.getElementById('ck-exp').value;
+  var cvv   = document.getElementById('ck-cvv').value;
+  var holder= document.getElementById('ck-cardholder').value.trim();
+  var terms = document.getElementById('ck-terms').checked;
+
+  /* Validate account fields */
+  if (!name) return showErr('Informe seu nome.');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return showErr('E-mail invalido.');
+  if (pass.length < 8) return showErr('Senha deve ter pelo menos 8 caracteres.');
+  if (!terms) return showErr('Aceite os termos para continuar.');
+
+  /* Validate payment fields */
+  if (card.length < 13) return showErr('Numero do cartao invalido.');
+  if (!/^\d{2}\/\d{2}$/.test(exp)) return showErr('Validade invalida. Use MM/AA.');
+  if (cvv.length < 3) return showErr('CVV invalido.');
+  if (!holder) return showErr('Informe o nome no cartao.');
+
+  /* Check existing email */
+  var users = JSON.parse(localStorage.getItem('co_users') || '[]');
+  if (users.some(function(u){ return u.email === email; }))
+    return showErr('E-mail ja cadastrado. Faca login.');
+
+  setBusy(true);
+
+  /* Simulate payment processing */
+  setTimeout(function() {
+    /* Payment approved - create account with paid plan */
+    var encPass = btoa(unescape(encodeURIComponent(pass)));
+    users.push({
+      name: name,
+      company: co,
+      email: email,
+      pass: encPass,
+      ok: true,
+      plan: selectedPlan === 'enterprise' ? 'enterprise' : 'pro',
+      paidAt: new Date().toISOString(),
+      at: new Date().toISOString()
+    });
+    localStorage.setItem('co_users', JSON.stringify(users));
+    localStorage.setItem('co_logged', JSON.stringify({ name: name, email: email, company: co }));
+
+    /* Show success */
+    document.getElementById('step-payment').style.display = 'none';
+    document.getElementById('step-success').style.display = '';
+    document.getElementById('ok-name').textContent = name;
+    setTimeout(function(){ document.getElementById('ok-bar').style.width = '100%'; }, 80);
+
+    toastMsg('Pagamento aprovado! Conta criada com sucesso.', 'success');
+
+    /* Redirect to dashboard */
+    setTimeout(function(){ window.location.href = '/dashboard.html'; }, 3400);
+  }, 2200);
+};
+
+/* ── URL PARAM: ?plano=enterprise ── */
+(function checkPlan() {
+  var params = new URLSearchParams(window.location.search);
+  var plano = params.get('plano');
+  if (plano === 'enterprise') {
+    selectPlan('enterprise');
+  }
+})();
+
+})();
+</script>
+</body>
+</html>
