@@ -334,7 +334,7 @@ function Simulador({ onSave }) {
   const [etapasCustom, setEtapasCustom] = useState({});
   const [expandido, setExpandido] = useState(null);
   const [modoDetalhe, setModoDetalhe] = useState(false);
-  if (simBlocked) { window.location.href = '/checkout.html'; return null; }
+  if (simBlocked) { window.location.href = 'https://link.hubflashglobal.com.br/calcobrapro'; return null; }
 
   const togglePct = (id, delta) => {
     setEtapasCustom(prev => {
@@ -631,7 +631,7 @@ function Simulador({ onSave }) {
           {/* Actions */}
           <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
             <Btn onClick={()=>{
-              if (isLimited()) { window.location.href = '/checkout.html'; return; }
+              if (isLimited()) { window.location.href = 'https://link.hubflashglobal.com.br/calcobrapro'; return; }
               const sim = { uf, padrao, area, pavimentos, bdi, encSocial, etapasCustom,
                 total: r.total, totalM2: r.totalM2, data: new Date().toISOString() };
               const sims = JSON.parse(localStorage.getItem("co_simulacoes_sinapi")||"[]");
@@ -1150,7 +1150,7 @@ function Calculadoras() {
     setTab(id);
   };
 
-  if (isLimited()) { window.location.href = '/checkout.html'; return null; }
+  if (isLimited()) { window.location.href = 'https://link.hubflashglobal.com.br/calcobrapro'; return null; }
 
   return (
     <div>
@@ -1308,7 +1308,7 @@ function NovoOrcamento({ onNav }) {
 
   const handleSave = () => {
     if (!f.cliente || !f.servico) return alert("Preencha cliente e serviço.");
-    if (!edit && isLimited()) { window.location.href = '/checkout.html'; return; }
+    if (!edit && isLimited()) { window.location.href = 'https://link.hubflashglobal.com.br/calcobrapro'; return; }
     const orc = { ...f, id: edit?.id || `#${String(orcamentos.length + 1).padStart(4, "0")}`, total: r.total, area: f.area, criadoEm: edit?.criadoEm || new Date().toISOString(), atualizadoEm: new Date().toISOString() };
     if (edit) { save(orcamentos.map(o => o.id === edit.id ? orc : o)); } else { save([orc, ...orcamentos]); }
     setView("list"); setEdit(null); setF({ cliente: "", servico: "", descricao: "", area: "", valorM2: "", maoObra: "", extras: 0, margem: 15, status: "rascunho" });
