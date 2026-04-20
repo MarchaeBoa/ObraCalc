@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "ObraCalc Dev Tools",
+  "version": "1.0.0",
+  "description": "Abre GitHub, Supabase e Vercel em novas abas com um clique.",
+  "action": {
+    "default_title": "Abrir GitHub, Supabase e Vercel",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["tabs"]
+}
