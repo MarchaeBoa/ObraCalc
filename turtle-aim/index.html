@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Turtle Aim — Calculadora</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root{
+    --bg:#050505; --bg2:#0c0c0c; --bg3:#141414; --bg4:#1a1a1a;
+    --gold:#C9982A; --gold2:#EEC85A; --gold3:#F8DC82;
+    --text:#F2EDE4; --text2:#8A8070; --text3:#3A3530;
+    --border:rgba(255,255,255,0.08); --border2:rgba(201,152,42,0.3);
+    --red:#ff4757; --green:#2ed573; --blue:#4c9aff;
+  }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;overscroll-behavior:none;}
+  body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+  .app{max-width:520px;margin:0 auto;padding:12px 14px 24px;}
+  .hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 0 16px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .hdr h1{font-size:18px;font-weight:800;margin:0;letter-spacing:2px;background:linear-gradient(135deg,var(--gold),var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hdr .sub{font-size:10px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+  .gear{background:transparent;border:1px solid var(--border);color:var(--text2);width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
+  .gear:active{background:var(--bg3);}
+
+  /* Shot type tabs */
+  .shot-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:16px;background:var(--bg2);padding:4px;border-radius:12px;border:1px solid var(--border);}
+  .shot-tab{background:transparent;border:none;color:var(--text2);padding:12px 4px;border-radius:9px;font-weight:700;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all .15s;}
+  .shot-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;box-shadow:0 4px 14px rgba(201,152,42,.35);}
+  .shot-tab .em{display:block;font-size:16px;margin-bottom:2px;}
+
+  /* Sections */
+  .sec{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .sec .lbl{display:flex;justify-content:space-between;align-items:center;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);margin-bottom:10px;}
+  .sec .lbl .val{color:var(--gold2);font-weight:700;font-size:13px;letter-spacing:1px;}
+
+  /* Distance chips */
+  .chips{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;}
+  .chip{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 0;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;text-align:center;}
+  .chip.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border-color:var(--gold);}
+  .chip:active{transform:scale(0.95);}
+
+  /* SD level */
+  .sd-row{display:flex;gap:6px;align-items:center;justify-content:center;}
+  .sd-row .step{width:40px;height:40px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .sd-row .step:active{background:var(--bg4);}
+  .sd-row .sd-val{flex:1;text-align:center;font-weight:800;font-size:22px;color:var(--gold2);}
+  .sd-row .sd-val .desc{font-size:10px;color:var(--text2);font-weight:500;margin-top:2px;letter-spacing:1px;}
+
+  /* Wind */
+  .wind-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;align-items:center;}
+  .compass{position:relative;aspect-ratio:1;width:100%;max-width:220px;margin:0 auto;}
+  .compass svg{width:100%;height:100%;display:block;touch-action:none;}
+  .wind-controls{display:flex;flex-direction:column;gap:12px;}
+  .wind-force{text-align:center;}
+  .wind-force .num{font-size:42px;font-weight:900;color:var(--gold2);line-height:1;}
+  .wind-force .u{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:2px;margin-top:4px;}
+  .slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;background:var(--bg4);border-radius:3px;outline:none;}
+  .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:50%;cursor:pointer;border:2px solid #000;box-shadow:0 2px 8px rgba(201,152,42,.4);}
+  .slider::-moz-range-thumb{width:22px;height:22px;background:var(--gold2);border-radius:50%;cursor:pointer;border:2px solid #000;}
+  .deg-read{font-size:11px;color:var(--text2);text-align:center;letter-spacing:1px;}
+  .deg-read b{color:var(--text);font-weight:700;}
+
+  /* Result */
+  .result{background:linear-gradient(135deg,#0a0a0a,#151515);border:1px solid var(--border2);border-radius:16px;padding:18px 14px;margin-bottom:12px;position:relative;overflow:hidden;}
+  .result::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold2),transparent);}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .result-grid.three{grid-template-columns:1fr 1fr 1fr;}
+  .r-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;}
+  .r-card .rl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;}
+  .r-card .rv{font-size:28px;font-weight:900;background:linear-gradient(135deg,var(--gold2),var(--gold3));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;}
+  .r-card .ru{font-size:10px;color:var(--text2);margin-top:4px;letter-spacing:1px;}
+
+  /* Settings panel */
+  .panel{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+  .panel.open{display:flex;}
+  .panel-inner{background:var(--bg2);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;border-radius:18px 18px 0 0;padding:18px;border-top:1px solid var(--border2);}
+  .panel h2{font-size:14px;margin:0 0 14px 0;letter-spacing:2px;color:var(--gold2);text-transform:uppercase;}
+  .panel .close{position:absolute;top:12px;right:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;}
+  .cal-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+  .cal-row:last-child{border-bottom:none;}
+  .cal-row .k{font-size:11px;color:var(--text2);letter-spacing:1px;}
+  .cal-row input{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;width:90px;font-size:14px;font-weight:600;text-align:right;font-family:inherit;}
+  .cal-row input:focus{outline:none;border-color:var(--gold2);}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+  .btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:10px;font-weight:700;font-size:12px;letter-spacing:1px;cursor:pointer;text-transform:uppercase;font-family:inherit;}
+  .btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border-color:var(--gold);}
+  .btn:active{transform:scale(0.97);}
+  .tabs-cal{display:flex;gap:4px;background:var(--bg3);padding:3px;border-radius:10px;margin-bottom:14px;}
+  .tab-cal{flex:1;background:transparent;border:none;color:var(--text2);padding:8px 4px;border-radius:8px;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;}
+  .tab-cal.active{background:var(--gold);color:#000;}
+
+  .hint{font-size:10px;color:var(--text3);text-align:center;padding:8px 0 4px;letter-spacing:1px;}
+  .hint a{color:var(--text2);}
+
+  .badge{display:inline-block;padding:2px 6px;background:var(--bg4);border-radius:4px;font-size:9px;letter-spacing:1px;color:var(--text2);text-transform:uppercase;}
+  .warn{font-size:10px;color:var(--text2);padding:6px 10px;background:rgba(255,71,87,0.08);border:1px solid rgba(255,71,87,0.2);border-radius:8px;margin-bottom:12px;line-height:1.4;}
+
+  @media (max-width:380px){
+    .chip{font-size:10px;padding:8px 0;}
+    .r-card .rv{font-size:24px;}
+    .wind-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="hdr">
+    <div>
+      <h1>TURTLE AIM</h1>
+      <div class="sub">Base 80 · Calculadora</div>
+    </div>
+    <button class="gear" id="gear" aria-label="Configurações">⚙</button>
+  </div>
+
+  <!-- Shot type tabs -->
+  <div class="shot-tabs">
+    <button class="shot-tab active" data-shot="1">
+      <span class="em">🎯</span>TIRO 1
+    </button>
+    <button class="shot-tab" data-shot="ss">
+      <span class="em">☁</span>SS
+    </button>
+    <button class="shot-tab" data-shot="ssd">
+      <span class="em">⏱</span>SS DELAY
+    </button>
+  </div>
+
+  <!-- Result card -->
+  <div class="result">
+    <div class="result-grid" id="resultGrid">
+      <div class="r-card">
+        <div class="rl">Ângulo</div>
+        <div class="rv" id="outAngle">—</div>
+        <div class="ru">graus</div>
+      </div>
+      <div class="r-card">
+        <div class="rl">Força</div>
+        <div class="rv" id="outForce">—</div>
+        <div class="ru" id="outForceUnit">segundos</div>
+      </div>
+      <div class="r-card" id="delayCard" style="display:none;">
+        <div class="rl">Delay</div>
+        <div class="rv" id="outDelay">—</div>
+        <div class="ru">segundos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Distance -->
+  <div class="sec">
+    <div class="lbl">
+      <span>Distância</span>
+      <span class="val" id="distVal">4/8</span>
+    </div>
+    <div class="chips" id="distChips">
+      <button class="chip" data-d="1">1/8</button>
+      <button class="chip" data-d="2">2/8</button>
+      <button class="chip" data-d="3">3/8</button>
+      <button class="chip active" data-d="4">4/8</button>
+      <button class="chip" data-d="5">5/8</button>
+      <button class="chip" data-d="6">6/8</button>
+      <button class="chip" data-d="7">7/8</button>
+      <button class="chip" data-d="8">8/8</button>
+    </div>
+  </div>
+
+  <!-- SD height -->
+  <div class="sec">
+    <div class="lbl">
+      <span>Altura (SD)</span>
+      <span class="val" id="sdVal">0</span>
+    </div>
+    <div class="sd-row">
+      <button class="step" id="sdDown">−</button>
+      <div class="sd-val">
+        <div id="sdDisplay">1SD</div>
+        <div class="desc" id="sdDesc">mesmo nível</div>
+      </div>
+      <button class="step" id="sdUp">+</button>
+    </div>
+  </div>
+
+  <!-- Wind -->
+  <div class="sec">
+    <div class="lbl">
+      <span>Vento</span>
+      <span class="val"><span id="windForceV">0</span> · <span id="windDegV">0°</span></span>
+    </div>
+    <div class="wind-grid">
+      <div class="compass">
+        <svg viewBox="0 0 200 200" id="compass">
+          <defs>
+            <radialGradient id="bgGrad"><stop offset="0%" stop-color="#0c0c0c"/><stop offset="100%" stop-color="#050505"/></radialGradient>
+          </defs>
+          <circle cx="100" cy="100" r="90" fill="url(#bgGrad)" stroke="#222" stroke-width="1"/>
+          <circle cx="100" cy="100" r="60" fill="none" stroke="#151515" stroke-width="1"/>
+          <circle cx="100" cy="100" r="30" fill="none" stroke="#151515" stroke-width="1"/>
+          <line x1="100" y1="10" x2="100" y2="190" stroke="#1a1a1a" stroke-width="1"/>
+          <line x1="10" y1="100" x2="190" y2="100" stroke="#1a1a1a" stroke-width="1"/>
+          <text x="100" y="22" text-anchor="middle" fill="#555" font-size="9" font-weight="700">N</text>
+          <text x="182" y="104" text-anchor="middle" fill="#555" font-size="9" font-weight="700">E</text>
+          <text x="100" y="188" text-anchor="middle" fill="#555" font-size="9" font-weight="700">S</text>
+          <text x="18" y="104" text-anchor="middle" fill="#555" font-size="9" font-weight="700">W</text>
+          <!-- arrow -->
+          <g id="arrow" transform="rotate(0 100 100)">
+            <line x1="100" y1="100" x2="100" y2="20" stroke="#C9982A" stroke-width="3" stroke-linecap="round"/>
+            <polygon points="100,14 94,28 106,28" fill="#EEC85A"/>
+            <circle cx="100" cy="100" r="5" fill="#C9982A" stroke="#000" stroke-width="2"/>
+          </g>
+        </svg>
+      </div>
+      <div class="wind-controls">
+        <div class="wind-force">
+          <div class="num" id="windForceDisp">0</div>
+          <div class="u">força</div>
+        </div>
+        <input type="range" class="slider" id="windForce" min="0" max="30" value="0">
+        <div class="deg-read">Direção: <b id="windDegDisp">0°</b> (toque na bússola)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">Toque ⚙ para calibrar · Dados: Darkcastle / Guild Rise</div>
+</div>
+
+<!-- Settings / Calibration panel -->
+<div class="panel" id="panel">
+  <div class="panel-inner" style="position:relative;">
+    <button class="close" id="close">×</button>
+    <h2>Calibração</h2>
+    <div class="warn">Ajuste os valores para ficarem iguais aos da sua experiência no jogo. Os valores salvam automaticamente no seu celular.</div>
+
+    <div class="tabs-cal">
+      <button class="tab-cal active" data-calt="force">FORÇAS BASE</button>
+      <button class="tab-cal" data-calt="angle">ÂNGULOS</button>
+      <button class="tab-cal" data-calt="wind">VENTO</button>
+    </div>
+
+    <div id="calForce">
+      <div class="cal-row"><span class="k">1/8 · força base</span><input type="number" step="0.01" data-f="1"></div>
+      <div class="cal-row"><span class="k">2/8 · força base</span><input type="number" step="0.01" data-f="2"></div>
+      <div class="cal-row"><span class="k">3/8 · força base</span><input type="number" step="0.01" data-f="3"></div>
+      <div class="cal-row"><span class="k">4/8 · força base</span><input type="number" step="0.01" data-f="4"></div>
+      <div class="cal-row"><span class="k">5/8 · força base</span><input type="number" step="0.01" data-f="5"></div>
+      <div class="cal-row"><span class="k">6/8 · força base</span><input type="number" step="0.01" data-f="6"></div>
+      <div class="cal-row"><span class="k">7/8 · força base</span><input type="number" step="0.01" data-f="7"></div>
+      <div class="cal-row"><span class="k">8/8 · força base</span><input type="number" step="0.01" data-f="8"></div>
+    </div>
+
+    <div id="calAngle" style="display:none;">
+      <div class="cal-row"><span class="k">Tiro 1 · ângulo base</span><input type="number" step="1" data-a="1"></div>
+      <div class="cal-row"><span class="k">SS · ângulo base</span><input type="number" step="1" data-a="ss"></div>
+      <div class="cal-row"><span class="k">SS Delay · ângulo base</span><input type="number" step="1" data-a="ssd"></div>
+      <div class="cal-row"><span class="k">Ajuste por SD (graus)</span><input type="number" step="0.5" data-a="sd"></div>
+      <div class="cal-row"><span class="k">Delay base (s)</span><input type="number" step="0.1" data-a="delay"></div>
+    </div>
+
+    <div id="calWind" style="display:none;">
+      <div class="cal-row"><span class="k">Multiplicador (horizontal)</span><input type="number" step="0.01" data-w="hmul"></div>
+      <div class="cal-row"><span class="k">Multiplicador (vertical)</span><input type="number" step="0.01" data-w="vmul"></div>
+      <div class="cal-row"><span class="k">SD · força por nível</span><input type="number" step="0.01" data-w="sdf"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="reset">RESTAURAR PADRÃO</button>
+      <button class="btn primary" id="save">SALVAR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ======= DEFAULT DATA (from Darkcastle's Turtle Base 80 chart) =======
+  const DEFAULTS = {
+    force: {1:1.45, 2:2.08, 3:2.53, 4:2.93, 5:3.27, 6:3.59, 7:3.87, 8:3.95},
+    angle: {'1':0, 'ss':60, 'ssd':60, 'sd':4, 'delay':3.0},
+    wind:  {hmul:0.035, vmul:0.020, sdf:0.30}
+  };
+
+  // ======= STATE =======
+  let state = {
+    shot:'1',
+    dist:4,
+    sd:0,                    // -3..+3 relative (0 = mesmo nível = 1SD)
+    windForce:0,
+    windDeg:0                // 0 = cima (norte), 90 = direita (leste)...
+  };
+
+  let config = loadConfig();
+
+  function loadConfig(){
+    try{
+      const raw = localStorage.getItem('turtle-aim-config');
+      if(raw){ const c = JSON.parse(raw); return deepMerge(structuredClone(DEFAULTS), c); }
+    }catch(e){}
+    return structuredClone(DEFAULTS);
+  }
+  function saveConfig(){
+    localStorage.setItem('turtle-aim-config', JSON.stringify(config));
+  }
+  function deepMerge(t,s){
+    for(const k in s){ if(s[k] && typeof s[k]==='object' && !Array.isArray(s[k])) t[k]=deepMerge(t[k]||{},s[k]); else t[k]=s[k]; }
+    return t;
+  }
+
+  // ======= CALCULATION =======
+  function calculate(){
+    const baseForce = config.force[state.dist] || 0;
+    const baseAngle = config.angle[state.shot] || 0;
+
+    // Wind decomposed: windDeg 0 = up (no horizontal effect)
+    // Assume shooter facing right by default. Horizontal component = sin(deg).
+    // Positive sin = wind to the right (tailwind if shooting right) -> REDUCES force.
+    // Negative sin = wind to the left (headwind) -> INCREASES force.
+    const rad = state.windDeg * Math.PI / 180;
+    const horiz = Math.sin(rad);        // -1..+1
+    const vert  = -Math.cos(rad);       // +1 = down (wind pushing up adds force? depends on shot)
+
+    // SD height effect (each SD level up adds force; down reduces)
+    const sdForce = state.sd * config.wind.sdf;
+
+    // Wind force adjustment
+    const windForceAdj = state.windForce * (horiz * config.wind.hmul) * (state.shot === '1' ? 1 : 1.1);
+    const windVertAdj  = state.windForce * (vert  * config.wind.vmul);
+
+    // Total force (we treat headwind as +force, tailwind as -force)
+    let force = baseForce - windForceAdj + sdForce + windVertAdj;
+    force = Math.max(0, force);
+
+    // Angle adjustment: height difference compensates angle
+    const sdAngle = state.sd * config.angle.sd;
+    // Small wind tilt for SS
+    const windAngleAdj = state.shot !== '1' ? horiz * (state.windForce * 0.15) : 0;
+    let angle = baseAngle + sdAngle + windAngleAdj;
+    angle = Math.round(angle * 10) / 10;
+
+    // Delay only for SS Delay
+    const delay = state.shot === 'ssd'
+      ? Math.max(0.2, config.angle.delay - state.dist * 0.1)
+      : null;
+
+    return { force: force.toFixed(2), angle: angle.toFixed(1), delay: delay !== null ? delay.toFixed(1) : null };
+  }
+
+  // ======= RENDER =======
+  const $ = id => document.getElementById(id);
+
+  function render(){
+    const r = calculate();
+    $('outAngle').textContent = r.angle;
+    $('outForce').textContent = r.force;
+
+    if(r.delay !== null){
+      $('delayCard').style.display = '';
+      $('outDelay').textContent = r.delay;
+      $('resultGrid').classList.add('three');
+    } else {
+      $('delayCard').style.display = 'none';
+      $('resultGrid').classList.remove('three');
+    }
+
+    // Distance label
+    $('distVal').textContent = state.dist + '/8';
+
+    // SD display
+    const sdDisplay = state.sd === 0 ? '1SD' :
+                      state.sd > 0 ? (state.sd + 1) + 'SD ↑' :
+                      (-state.sd + 1) + 'SD ↓';
+    const sdDesc = state.sd === 0 ? 'mesmo nível' :
+                   state.sd > 0 ? 'inimigo mais alto' :
+                   'inimigo mais baixo';
+    $('sdDisplay').textContent = sdDisplay;
+    $('sdDesc').textContent = sdDesc;
+    $('sdVal').textContent = (state.sd > 0 ? '+' : '') + state.sd;
+
+    // Wind
+    $('windForceV').textContent = state.windForce;
+    $('windForceDisp').textContent = state.windForce;
+    $('windDegV').textContent = state.windDeg + '°';
+    $('windDegDisp').textContent = state.windDeg + '°';
+    $('arrow').setAttribute('transform', 'rotate(' + state.windDeg + ' 100 100)');
+
+    // Force unit label: for SS this is hold time, same unit
+    $('outForceUnit').textContent = 'força';
+  }
+
+  // ======= INPUT HANDLERS =======
+  // Shot tabs
+  document.querySelectorAll('.shot-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.shot-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.shot = btn.dataset.shot;
+      render();
+    });
+  });
+
+  // Distance chips
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.dist = parseInt(chip.dataset.d);
+      render();
+    });
+  });
+
+  // SD buttons
+  $('sdDown').addEventListener('click', () => { state.sd = Math.max(-3, state.sd - 1); render(); });
+  $('sdUp').addEventListener('click',   () => { state.sd = Math.min( 3, state.sd + 1); render(); });
+
+  // Wind force
+  $('windForce').addEventListener('input', e => {
+    state.windForce = parseInt(e.target.value);
+    render();
+  });
+
+  // Compass tap
+  const compass = $('compass');
+  function handleCompass(e){
+    const rect = compass.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left - rect.width/2;
+    const y = clientY - rect.top - rect.height/2;
+    let deg = Math.atan2(x, -y) * 180 / Math.PI;
+    if(deg < 0) deg += 360;
+    state.windDeg = Math.round(deg);
+    render();
+  }
+  compass.addEventListener('touchstart', e => { e.preventDefault(); handleCompass(e); }, {passive:false});
+  compass.addEventListener('touchmove',  e => { e.preventDefault(); handleCompass(e); }, {passive:false});
+  compass.addEventListener('mousedown',  e => { handleCompass(e); compass.onmousemove = handleCompass; });
+  compass.addEventListener('mouseup',    () => { compass.onmousemove = null; });
+  compass.addEventListener('mouseleave', () => { compass.onmousemove = null; });
+
+  // ======= SETTINGS PANEL =======
+  const panel = $('panel');
+  function openPanel(){
+    // fill inputs
+    document.querySelectorAll('[data-f]').forEach(i => i.value = config.force[i.dataset.f]);
+    document.querySelectorAll('[data-a]').forEach(i => i.value = config.angle[i.dataset.a]);
+    document.querySelectorAll('[data-w]').forEach(i => i.value = config.wind[i.dataset.w]);
+    panel.classList.add('open');
+  }
+  $('gear').addEventListener('click', openPanel);
+  $('close').addEventListener('click', () => panel.classList.remove('open'));
+  panel.addEventListener('click', e => { if(e.target === panel) panel.classList.remove('open'); });
+
+  // Calibration tabs
+  document.querySelectorAll('.tab-cal').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab-cal').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      $('calForce').style.display = t.dataset.calt === 'force' ? '' : 'none';
+      $('calAngle').style.display = t.dataset.calt === 'angle' ? '' : 'none';
+      $('calWind').style.display  = t.dataset.calt === 'wind'  ? '' : 'none';
+    });
+  });
+
+  $('save').addEventListener('click', () => {
+    document.querySelectorAll('[data-f]').forEach(i => { const v = parseFloat(i.value); if(!isNaN(v)) config.force[i.dataset.f] = v; });
+    document.querySelectorAll('[data-a]').forEach(i => { const v = parseFloat(i.value); if(!isNaN(v)) config.angle[i.dataset.a] = v; });
+    document.querySelectorAll('[data-w]').forEach(i => { const v = parseFloat(i.value); if(!isNaN(v)) config.wind[i.dataset.w] = v; });
+    saveConfig();
+    panel.classList.remove('open');
+    render();
+  });
+
+  $('reset').addEventListener('click', () => {
+    if(confirm('Restaurar valores padrão?')){
+      config = structuredClone(DEFAULTS);
+      saveConfig();
+      openPanel();
+    }
+  });
+
+  // Initial render
+  render();
+
+  // Prevent pull-to-refresh bounce
+  document.addEventListener('touchmove', e => {
+    if(e.target.tagName !== 'INPUT' && !e.target.closest('.panel-inner')){
+      // allow scroll in panel
+    }
+  }, {passive:true});
+
+})();
+</script>
+</body>
+</html>

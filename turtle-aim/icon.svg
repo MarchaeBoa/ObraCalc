@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#C9982A"/>
+      <stop offset="50%" stop-color="#EEC85A"/>
+      <stop offset="100%" stop-color="#C9982A"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <rect x="8" y="8" width="496" height="496" rx="92" fill="none" stroke="#C9982A" stroke-width="4" opacity="0.4"/>
+  <!-- crosshair -->
+  <circle cx="256" cy="256" r="140" fill="none" stroke="url(#gold)" stroke-width="8"/>
+  <circle cx="256" cy="256" r="90" fill="none" stroke="url(#gold)" stroke-width="4" opacity="0.5"/>
+  <circle cx="256" cy="256" r="40" fill="none" stroke="url(#gold)" stroke-width="4" opacity="0.3"/>
+  <line x1="256" y1="80" x2="256" y2="140" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+  <line x1="256" y1="372" x2="256" y2="432" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+  <line x1="80" y1="256" x2="140" y2="256" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+  <line x1="372" y1="256" x2="432" y2="256" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="12" fill="url(#gold)"/>
+  <!-- T for Turtle -->
+  <text x="256" y="275" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="56" font-weight="900" fill="#050505">T</text>
+</svg>
