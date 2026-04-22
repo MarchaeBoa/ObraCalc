@@ -34,7 +34,7 @@ function doPost(e) {
       'Este codigo expira em 10 minutos.\n' +
       'Se voce nao solicitou este codigo, ignore este e-mail.\n\n' +
       '— Equipe CalcObra Pro\n' +
-      'Yoha Digital E-Commerce Ltda';
+      'CRIPTOFACIL INTERMEDIACAO DE NEGOCIOS LTDA';
 
     var htmlBody = '' +
       '<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;background:#040404;border-radius:16px;overflow:hidden;border:1px solid rgba(201,152,42,0.2)">' +
@@ -52,7 +52,7 @@ function doPost(e) {
         '</div>' +
         '<div style="background:#080808;padding:20px 28px;text-align:center;border-top:1px solid rgba(255,255,255,0.05)">' +
           '<p style="color:#504838;font-size:11px;margin:0">Se voce nao solicitou este codigo, ignore este e-mail.</p>' +
-          '<p style="color:#504838;font-size:10px;margin:8px 0 0">Yoha Digital E-Commerce Ltda &bull; CNPJ 61.461.499/0001-29</p>' +
+          '<p style="color:#504838;font-size:10px;margin:8px 0 0">CRIPTOFACIL INTERMEDIACAO DE NEGOCIOS LTDA &bull; CNPJ 57.175.709/0001-45</p>' +
         '</div>' +
       '</div>';
 
