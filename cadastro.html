@@ -152,7 +152,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   var ADM_PASS  = btoa(unescape(encodeURIComponent('Lojas1515#')));
   var users = JSON.parse(localStorage.getItem('co_users') || '[]');
   if (!users.some(function(u){ return u.email === ADM_EMAIL; })) {
-    users.push({ name:'Admin', company:'Yoha Digital', email:ADM_EMAIL, pass:ADM_PASS, ok:true, plan:'pro', role:'admin', at:new Date().toISOString() });
+    users.push({ name:'Admin', company:'CriptoFacil', email:ADM_EMAIL, pass:ADM_PASS, ok:true, plan:'pro', role:'admin', at:new Date().toISOString() });
     localStorage.setItem('co_users', JSON.stringify(users));
   }
 })();
